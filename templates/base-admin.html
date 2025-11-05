@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Admin Panel - LinkedCommerce{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              linkedin: {
+                blue: "#0a66c2",
+                light: "#70b5f9",
+                dark: "#004182",
+                background: "#f3f2ef",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .sidebar {
+        transition: all 0.3s ease;
+      }
+      .sidebar.collapsed {
+        width: 70px;
+      }
+      .sidebar.collapsed .sidebar-text {
+        display: none;
+      }
+      .main-content {
+        transition: all 0.3s ease;
+      }
+      .stats-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      }
+      .table-row:hover {
+        background-color: #f9fafb;
+      }
+      .progress-bar {
+        transition: width 0.5s ease-in-out;
+      }
+    </style>
+  </head>
+  <body class="bg-linkedin-background">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="fixed top-4 right-4 z-50 space-y-2">
+      {% for category, message in messages %}
+      <div
+        class="px-6 py-4 rounded-lg shadow-lg border-l-4 {% if category == 'error' %}bg-red-100 border-red-500 text-red-700{% elif category == 'success' %}bg-green-100 border-green-500 text-green-700{% else %}bg-blue-100 border-blue-500 text-blue-700{% endif %}"
+      >
+        <div class="flex items-center">
+          <i
+            class="fas {% if category == 'error' %}fa-exclamation-circle{% elif category == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %} mr-3"
+          ></i>
+          <span>{{ message }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+
+    <!-- Admin Layout -->
+    <div class="flex h-screen">
+      <!-- Sidebar -->
+      <div class="sidebar bg-white shadow-lg w-64 flex flex-col" id="sidebar" data-aos="fade-right">
+        <!-- Logo -->
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+          <div class="flex items-center">
+            <i class="fas fa-shopping-bag text-linkedin-blue text-xl mr-2"></i>
+            <h1 class="text-xl font-bold text-linkedin-blue sidebar-text">Admin Panel</h1>
+          </div>
+          <button id="sidebar-toggle" class="text-gray-500 hover:text-linkedin-blue">
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+
+        <!-- User Info -->
+        <div class="p-4 border-b border-gray-200 flex items-center">
+          <img
+            src="https://randomuser.me/api/portraits/men/75.jpg"
+            alt="Admin Profile"
+            class="w-10 h-10 rounded-full mr-3 border-2 border-linkedin-blue"
+          />
+          <div class="sidebar-text">
+            <p class="font-medium text-gray-800">{{ current_user.first_name }} {{ current_user.last_name }}</p>
+            <p class="text-xs text-gray-500">Administrator</p>
+          </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="flex-1 overflow-y-auto py-4">
+          <ul class="space-y-1 px-2">
+            <li>
+              <a
+                href="{{ url_for('admin_dashboard') }}"
+                class="flex items-center px-4 py-3 text-gray-700 hover:bg-linkedin-background hover:text-linkedin-blue rounded-lg transition"
+              >
+                <i class="fas fa-tachometer-alt w-5 text-center mr-3 text-linkedin-blue"></i>
+                <span class="sidebar-text">Dashboard</span>
+              </a>
+            </li>
+            <li>
+              <a
+                href="{{ url_for('admin_products') }}"
+                class="flex items-center px-4 py-3 text-gray-700 hover:bg-linkedin-background hover:text-linkedin-blue rounded-lg transition"
+              >
+                <i class="fas fa-cube w-5 text-center mr-3 text-linkedin-blue"></i>
+                <span class="sidebar-text">Produk</span>
+                <span class="ml-auto bg-linkedin-blue text-white text-xs px-2 py-1 rounded-full sidebar-text">12</span>
+              </a>
+            </li>
+            <li>
+              <a
+                href="{{ url_for('admin_orders') }}"
+                class="flex items-center px-4 py-3 text-gray-700 hover:bg-linkedin-background hover:text-linkedin-blue rounded-lg transition"
+              >
+                <i class="fas fa-shopping-bag w-5 text-center mr-3 text-linkedin-blue"></i>
+                <span class="sidebar-text">Pesanan</span>
+                <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full sidebar-text">5</span>
+              </a>
+            </li>
+            <li>
+              <a
+                href="{{ url_for('admin_users') }}"
+                class="flex items-center px-4 py-3 text-gray-700 hover:bg-linkedin-background hover:text-linkedin-blue rounded-lg transition"
+              >
+                <i class="fas fa-users w-5 text-center mr-3 text-linkedin-blue"></i>
+                <span class="sidebar-text">Pengguna</span>
+                <span class="ml-auto bg-green-500 text-white text-xs px-2 py-1 rounded-full sidebar-text">128</span>
+              </a>
+            </li>
+            </li>
+            <li>
+              <a
+                href="{{ url_for('admin_report') }}"
+                class="flex items-center px-4 py-3 text-gray-700 hover:bg-linkedin-background hover:text-linkedin-blue rounded-lg transition"
+              >
+                <i class="fas fa-chart-bar w-5 text-center mr-3 text-linkedin-blue"></i>
+                <span class="sidebar-text">Laporan</span>
+              </a>
+            </li>
+            <li>
+              <a
+                href=""
+                class="flex items-center px-4 py-3 text-gray-700 hover:bg-linkedin-background hover:text-linkedin-blue rounded-lg transition"
+              >
+                <i class="fas fa-cog w-5 text-center mr-3 text-linkedin-blue"></i>
+                <span class="sidebar-text">Pengaturan</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- Logout -->
+        <div class="p-4 border-t border-gray-200">
+          <a
+            href="{{ url_for('logout') }}"
+            class="flex items-center px-4 py-3 text-gray-700 hover:bg-linkedin-background hover:text-linkedin-blue rounded-lg transition"
+          >
+            <i class="fas fa-sign-out-alt w-5 text-center mr-3 text-linkedin-blue"></i>
+            <span class="sidebar-text">Keluar</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content flex-1 flex flex-col overflow-hidden" id="main-content">
+        <!-- Top Bar -->
+        <header class="bg-white shadow-sm border-b" data-aos="fade-down">
+          <div class="flex items-center justify-between px-6 py-4">
+            <div class="flex items-center">
+              <h2 class="text-xl font-semibold text-gray-800">
+                <i class="fas fa-{% block page_icon %}tachometer-alt{% endblock %} mr-2 text-linkedin-blue"></i>
+                {% block page_title %}Dashboard Admin{% endblock %}
+              </h2>
+            </div>
+            <div class="flex items-center space-x-4">
+              <!-- Search -->
+              <div class="relative">
+                <input
+                  type="text"
+                  placeholder="Cari..."
+                  class="bg-linkedin-background rounded-full py-2 px-4 pl-10 w-64 focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                />
+                <i class="fas fa-search absolute left-3 top-3 text-gray-500"></i>
+              </div>
+              
+              <!-- Notifications -->
+              <div class="relative">
+                <button class="text-gray-600 hover:text-linkedin-blue relative">
+                  <i class="fas fa-bell text-xl"></i>
+                  <span class="absolute -top-1 -right-1 bg-linkedin-blue text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">3</span>
+                </button>
+              </div>
+              
+              <!-- Quick Stats -->
+              <div class="hidden md:flex items-center space-x-4 text-sm">
+                <div class="text-center">
+                  <p class="font-semibold text-linkedin-blue">Rp 12.5JT</p>
+                  <p class="text-xs text-gray-500">Hari Ini</p>
+                </div>
+                <div class="h-6 border-l border-gray-300"></div>
+                <div class="text-center">
+                  <p class="font-semibold text-linkedin-blue">24</p>
+                  <p class="text-xs text-gray-500">Pesanan Baru</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Page Content -->
+        <main class="flex-1 overflow-y-auto p-6 bg-linkedin-background">
+          <!-- Breadcrumb -->
+          <nav class="flex mb-6" aria-label="Breadcrumb" data-aos="fade-up">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3">
+              <li class="inline-flex items-center">
+                <a href="{{ url_for('admin_dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-linkedin-blue">
+                  <i class="fas fa-home mr-2"></i>
+                  Dashboard
+                </a>
+              </li>
+              {% block breadcrumb %}{% endblock %}
+            </ol>
+          </nav>
+
+          {% block content %}
+          <!-- Content will be injected here -->
+          {% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t py-4" data-aos="fade-up">
+          <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+              <p class="text-gray-600 text-sm">
+                <i class="far fa-copyright mr-1"></i>2023 LinkedCommerce Admin. All rights reserved.
+              </p>
+              <div class="flex space-x-4 mt-2 md:mt-0">
+                <span class="text-xs text-gray-500">
+                  <i class="fas fa-database mr-1"></i>Status: <span class="text-green-500">Online</span>
+                </span>
+                <span class="text-xs text-gray-500">
+                  <i class="fas fa-server mr-1"></i>Server: <span class="text-linkedin-blue">Optimal</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+      // Inisialisasi AOS
+      AOS.init({
+        duration: 800,
+        easing: "ease-in-out",
+        once: true,
+        offset: 100,
+      });
+
+      // Sidebar Toggle
+      document.getElementById('sidebar-toggle').addEventListener('click', function() {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        
+        sidebar.classList.toggle('collapsed');
+        
+        if (sidebar.classList.contains('collapsed')) {
+          mainContent.classList.add('md:ml-16');
+        } else {
+          mainContent.classList.remove('md:ml-16');
+        }
+      });
+
+      // Auto hide flash messages
+      document.addEventListener("DOMContentLoaded", function () {
+        const flashMessages = document.querySelectorAll(".fixed > div");
+
+        flashMessages.forEach((flash) => {
+          setTimeout(() => {
+            flash.style.transition = "opacity 0.5s ease";
+            flash.style.opacity = "0";
+            setTimeout(() => {
+              if (flash.parentNode) {
+                flash.parentNode.removeChild(flash);
+              }
+            }, 500);
+          }, 5000);
+        });
+
+        // Animasi progress bar
+        const progressBars = document.querySelectorAll(".progress-bar");
+        progressBars.forEach((bar) => {
+          const width = bar.style.width;
+          bar.style.width = "0";
+          setTimeout(() => {
+            bar.style.width = width;
+          }, 500);
+        });
+      });
+    </script>
+  </body>
+</html>

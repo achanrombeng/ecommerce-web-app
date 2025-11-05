@@ -1,0 +1,198 @@
+{% extends "base-admin.html" %}
+
+{% block title %}Kelola Produk - LinkedCommerce{% endblock %}
+
+{% block page_title %}Kelola Produk{% endblock %}
+
+{% block page_icon %}cube{% endblock %}
+
+{% block breadcrumb %}
+<li>
+  <div class="flex items-center">
+    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+    <span class="text-sm font-medium text-gray-500">Produk</span>
+  </div>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Header Actions -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-aos="fade-up">
+    <div>
+      <h2 class="text-xl font-semibold text-gray-800">Daftar Produk</h2>
+      <p class="text-sm text-gray-600 mt-1">Kelola semua produk di toko online Anda</p>
+    </div>
+    <a class="bg-linkedin-blue hover:bg-linkedin-dark text-white px-4 py-2 rounded-lg font-medium transition duration-200" href="{{ url_for('admin_add_product') }}">
+      <i class="fas fa-plus mr-2"></i>Tambah Produk
+    </a>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6" data-aos="fade-up" data-aos-delay="100">
+    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-linkedin-blue">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Total Produk</p>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1">156</h3>
+        </div>
+        <div class="bg-linkedin-background p-3 rounded-full">
+          <i class="fas fa-cube text-linkedin-blue text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Produk Aktif</p>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1">142</h3>
+        </div>
+        <div class="bg-green-50 p-3 rounded-full">
+          <i class="fas fa-check-circle text-green-500 text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Stok Menipis</p>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1">8</h3>
+        </div>
+        <div class="bg-yellow-50 p-3 rounded-full">
+          <i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Habis Stok</p>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1">6</h3>
+        </div>
+        <div class="bg-red-50 p-3 rounded-full">
+          <i class="fas fa-times-circle text-red-500 text-xl"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="200">
+    <div class="flex flex-col md:flex-row gap-4">
+      <div class="flex-1">
+        <div class="relative">
+          <input
+            type="text"
+            placeholder="Cari produk..."
+            class="w-full bg-linkedin-background rounded-lg py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+          />
+          <i class="fas fa-search absolute left-3 top-3 text-gray-500"></i>
+        </div>
+      </div>
+      <select class="bg-linkedin-background rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-linkedin-blue">
+        <option>Semua Kategori</option>
+        <option>Elektronik</option>
+        <option>Fashion</option>
+        <option>Rumah Tangga</option>
+      </select>
+      <select class="bg-linkedin-background rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-linkedin-blue">
+        <option>Semua Status</option>
+        <option>Aktif</option>
+        <option>Nonaktif</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Products Table -->
+  <div class="bg-white rounded-lg shadow" data-aos="fade-up" data-aos-delay="300">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200" id="productsTableBody">
+          <!-- Product 1 -->
+          <tr class="table-row">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div class="h-10 w-10 flex-shrink-0">
+                  <img class="h-10 w-10 rounded-lg object-cover" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aGVhZHBob25lfGVufDB8fDB8fHww&auto=format&fit=crop&w=100&q=80" alt="">
+                </div>
+                <div class="ml-4">
+                  <div class="text-sm font-medium text-gray-900">Headphone Wireless Premium</div>
+                  <div class="text-sm text-gray-500">SKU: HP-WL-001</div>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Elektronik</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Rp 1.250.000</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <span class="text-sm font-medium text-gray-900 mr-2">45</span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <i class="fas fa-check mr-1"></i>Aman
+                </span>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Aktif
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <div class="flex space-x-2">
+                <a class="text-linkedin-blue hover:text-linkedin-dark" href="{{ url_for('admin_edit_product') }}">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <button class="text-red-600 hover:text-red-900">
+                  <i class="fas fa-trash"></i>
+                </button>
+                <button class="text-gray-600 hover:text-gray-900">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="px-6 py-4 border-t border-gray-200">
+      <div class="flex items-center justify-between">
+        <div class="text-sm text-gray-700">
+          Menampilkan <span class="font-medium">1-3</span> dari <span class="font-medium">156</span> produk
+        </div>
+        <div class="flex space-x-2">
+          <button class="px-3 py-1 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="px-3 py-1 rounded-lg bg-linkedin-blue text-white">1</button>
+          <button class="px-3 py-1 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">2</button>
+          <button class="px-3 py-1 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">3</button>
+          <button class="px-3 py-1 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// JavaScript untuk mengelola produk bisa ditambahkan di sini
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Products page loaded');
+});
+</script>
+{% endblock %}

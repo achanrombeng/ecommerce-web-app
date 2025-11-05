@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard User{% endblock %}
+
+{% block content %}
+<!-- Pesanan Terbaru -->
+<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-xl font-bold text-gray-800">
+      <i class="fas fa-shopping-bag mr-2"></i>Pesanan Terbaru
+    </h2>
+    <a href="{{ url_for('order_user') }}" class="text-linkedin-blue text-sm font-medium"
+      ><i class="fas fa-eye mr-1"></i>Lihat semua</a
+    >
+  </div>
+
+  <div class="border rounded-lg overflow-hidden">
+    <div class="border-b p-4 flex justify-between items-center">
+      <div>
+        <p class="font-medium">
+          <i class="fas fa-receipt mr-2"></i>Order #ORD-7892
+        </p>
+        <p class="text-sm text-gray-500">
+          <i class="far fa-calendar mr-1"></i>Tanggal: 25 Okt 2023
+        </p>
+      </div>
+      <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded"
+        ><i class="fas fa-truck mr-1"></i>Dikirim</span
+      >
+    </div>
+    <div class="p-4 flex items-center">
+      <img
+        src="https://via.placeholder.com/60"
+        alt="Product"
+        class="w-16 h-16 rounded-md mr-4"
+      />
+      <div class="flex-grow">
+        <p class="font-medium">Tas Ransel Modern</p>
+        <p class="text-sm text-gray-500">1 barang • Rp 349.000</p>
+      </div>
+      <button class="text-linkedin-blue text-sm font-medium">
+        <i class="fas fa-shipping-fast mr-1"></i>Lacak Paket
+      </button>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+    <div
+      class="bg-linkedin-background p-4 rounded-lg text-center"
+      data-aos="zoom-in"
+      data-aos-delay="100"
+    >
+      <div
+        class="bg-linkedin-blue rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2"
+      >
+        <i class="fas fa-clock text-white"></i>
+      </div>
+      <p class="text-sm text-gray-600">Menunggu Pembayaran</p>
+      <p class="text-xl font-bold mt-1">1</p>
+    </div>
+    <div
+      class="bg-linkedin-background p-4 rounded-lg text-center"
+      data-aos="zoom-in"
+      data-aos-delay="200"
+    >
+      <div
+        class="bg-yellow-500 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2"
+      >
+        <i class="fas fa-cog text-white"></i>
+      </div>
+      <p class="text-sm text-gray-600">Diproses</p>
+      <p class="text-xl font-bold mt-1">2</p>
+    </div>
+    <div
+      class="bg-linkedin-background p-4 rounded-lg text-center"
+      data-aos="zoom-in"
+      data-aos-delay="300"
+    >
+      <div
+        class="bg-green-500 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2"
+      >
+        <i class="fas fa-truck text-white"></i>
+      </div>
+      <p class="text-sm text-gray-600">Dikirim</p>
+      <p class="text-xl font-bold mt-1">1</p>
+    </div>
+  </div>
+</div>
+
+<!-- Rekomendasi untuk Anda -->
+<div
+  class="bg-white rounded-lg shadow p-6"
+  data-aos="fade-up"
+  data-aos-delay="100"
+>
+  <h2 class="text-xl font-bold text-gray-800 mb-4">
+    <i class="fas fa-thumbs-up mr-2"></i>Rekomendasi untuk Anda
+  </h2>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div
+      class="product-card bg-white border rounded-lg overflow-hidden transition-all"
+      data-aos="flip-left"
+      data-aos-delay="100"
+    >
+      <img
+        src="https://via.placeholder.com/150"
+        alt="Product"
+        class="w-full h-40 object-cover"
+      />
+      <div class="p-3">
+        <p class="text-sm font-medium mb-1">Smart Watch Series 5</p>
+        <p class="text-linkedin-blue font-bold">Rp 799.000</p>
+        <div class="flex items-center mt-1">
+          <div class="flex text-yellow-400">
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star-half-alt text-xs"></i>
+          </div>
+          <span class="text-xs text-gray-500 ml-1">(42)</span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="product-card bg-white border rounded-lg overflow-hidden transition-all"
+      data-aos="flip-left"
+      data-aos-delay="200"
+    >
+      <img
+        src="https://via.placeholder.com/150"
+        alt="Product"
+        class="w-full h-40 object-cover"
+      />
+      <div class="p-3">
+        <p class="text-sm font-medium mb-1">Headphone Wireless</p>
+        <p class="text-linkedin-blue font-bold">Rp 459.000</p>
+        <div class="flex items-center mt-1">
+          <div class="flex text-yellow-400">
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+            <i class="far fa-star text-xs"></i>
+          </div>
+          <span class="text-xs text-gray-500 ml-1">(28)</span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="product-card bg-white border rounded-lg overflow-hidden transition-all"
+      data-aos="flip-left"
+      data-aos-delay="300"
+    >
+      <img
+        src="https://via.placeholder.com/150"
+        alt="Product"
+        class="w-full h-40 object-cover"
+      />
+      <div class="p-3">
+        <p class="text-sm font-medium mb-1">Kamera Portable</p>
+        <p class="text-linkedin-blue font-bold">Rp 1.299.000</p>
+        <div class="flex items-center mt-1">
+          <div class="flex text-yellow-400">
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+          </div>
+          <span class="text-xs text-gray-500 ml-1">(56)</span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="product-card bg-white border rounded-lg overflow-hidden transition-all"
+      data-aos="flip-left"
+      data-aos-delay="400"
+    >
+      <img
+        src="https://via.placeholder.com/150"
+        alt="Product"
+        class="w-full h-40 object-cover"
+      />
+      <div class="p-3">
+        <p class="text-sm font-medium mb-1">Sepatu Running</p>
+        <p class="text-linkedin-blue font-bold">Rp 599.000</p>
+        <div class="flex items-center mt-1">
+          <div class="flex text-yellow-400">
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star text-xs"></i>
+            <i class="fas fa-star-half-alt text-xs"></i>
+          </div>
+          <span class="text-xs text-gray-500 ml-1">(37)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <a href="{{ url_for('produk_user') }}" class="block text-center text-linkedin-blue font-medium mt-6"
+    ><i class="fas fa-arrow-right mr-1"></i>Lihat lebih banyak</a
+  >
+</div>
+
+<!-- Wishlist -->
+<div
+  class="bg-white rounded-lg shadow p-6"
+  data-aos="fade-up"
+  data-aos-delay="200"
+>
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-xl font-bold text-gray-800">
+      <i class="fas fa-heart mr-2"></i>Wishlist Saya
+    </h2>
+    <a href="#" class="text-linkedin-blue text-sm font-medium"
+      ><i class="fas fa-eye mr-1"></i>Lihat semua</a
+    >
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="text-left text-gray-600 border-b">
+          <th class="pb-2">Produk</th>
+          <th class="pb-2">Harga</th>
+          <th class="pb-2">Status</th>
+          <th class="pb-2"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b hover:bg-gray-50" data-aos="fade-right">
+          <td class="py-3 flex items-center">
+            <img
+              src="https://via.placeholder.com/40"
+              alt="Product"
+              class="w-10 h-10 rounded-md mr-3"
+            />
+            <span>Jam Tangan Smart</span>
+          </td>
+          <td class="py-3">Rp 899.000</td>
+          <td class="py-3">
+            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded"
+              ><i class="fas fa-check-circle mr-1"></i>Tersedia</span
+            >
+          </td>
+          <td class="py-3">
+            <button class="text-red-500 hover:text-red-700">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
+        <tr
+          class="border-b hover:bg-gray-50"
+          data-aos="fade-right"
+          data-aos-delay="100"
+        >
+          <td class="py-3 flex items-center">
+            <img
+              src="https://via.placeholder.com/40"
+              alt="Product"
+              class="w-10 h-10 rounded-md mr-3"
+            />
+            <span>Koper Traveling</span>
+          </td>
+          <td class="py-3">Rp 1.199.000</td>
+          <td class="py-3">
+            <span
+              class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded"
+              ><i class="fas fa-clock mr-1"></i>Pre-order</span
+            >
+          </td>
+          <td class="py-3">
+            <button class="text-red-500 hover:text-red-700">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

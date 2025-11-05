@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daftar - LinkedIn</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- AOS Library -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"
+    />
+    <style>
+      .linkedin-bg {
+        background: linear-gradient(135deg, #0a66c2 0%, #004182 100%);
+      }
+      .glass-effect {
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95);
+      }
+      .linkedin-blue {
+        background-color: #0a66c2;
+      }
+      .linkedin-blue:hover {
+        background-color: #004182;
+      }
+      .linkedin-text {
+        color: #0a66c2;
+      }
+      .scrollable-form::-webkit-scrollbar {
+        width: 6px;
+      }
+      .scrollable-form::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+      .scrollable-form::-webkit-scrollbar-thumb {
+        background: #0a66c2;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body class="linkedin-bg min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-4xl py-10">
+      <!-- Container utama -->
+      <div
+        class="glass-effect rounded-2xl shadow-2xl overflow-hidden"
+        data-aos="fade-up"
+        data-aos-duration="800"
+      >
+        <!-- Header dan Form dalam layout horizontal -->
+        <div class="flex flex-col md:flex-row">
+          <!-- Header - Sidebar -->
+          <div
+            class="bg-white p-8 md:w-2/5 flex flex-col justify-center text-center md:text-left"
+          >
+            <div class="flex justify-center md:justify-start mb-4">
+              <i class="fab fa-linkedin text-5xl text-[#0a66c2]"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">
+              Buat Akun Baru
+            </h1>
+            <p class="text-gray-600">Bergabung dengan LinkedIn hari ini</p>
+
+            <!-- Informasi tambahan untuk layout landscape -->
+            <div class="mt-6 hidden md:block">
+              <div class="flex items-center mb-3">
+                <i class="fas fa-users text-[#0a66c2] mr-2"></i>
+                <span class="text-sm text-gray-600"
+                  >Jaringan profesional terbesar</span
+                >
+              </div>
+              <div class="flex items-center mb-3">
+                <i class="fas fa-briefcase text-[#0a66c2] mr-2"></i>
+                <span class="text-sm text-gray-600">Temukan peluang karir</span>
+              </div>
+              <div class="flex items-center">
+                <i class="fas fa-chart-line text-[#0a66c2] mr-2"></i>
+                <span class="text-sm text-gray-600"
+                  >Tingkatkan keterampilan Anda</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Form container -->
+          <div class="p-6 md:w-3/5">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %} {%
+            if messages %} {% for category, message in messages %}
+            <div
+              class="mb-4 p-3 rounded {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}"
+            >
+              {{ message }}
+            </div>
+            {% endfor %} {% endif %} {% endwith %}
+
+            <div class="scrollable-form max-h-[70vh] overflow-y-auto pr-2">
+              <form
+                method="POST"
+                action="{{ url_for('register') }}"
+                class="space-y-4 pb-4"
+              >
+                <!-- Baris 1: Nama Depan dan Belakang -->
+                <div
+                  class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  data-aos="fade-right"
+                  data-aos-delay="100"
+                >
+                  <!-- Nama Depan -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"
+                      >First Name</label
+                    >
+                    <input
+                      type="text"
+                      id="first_name"
+                      name="first_name"
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-transparent transition-all duration-200"
+                      placeholder="John"
+                      required
+                      value="{{ request.form.first_name if request.form }}"
+                    />
+                  </div>
+                  <!-- Nama Belakang -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"
+                      >Last Name</label
+                    >
+                    <input
+                      type="text"
+                      id="last_name"
+                      name="last_name"
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-transparent transition-all duration-200"
+                      placeholder="Doe"
+                      required
+                      value="{{ request.form.last_name if request.form }}"
+                    />
+                  </div>
+                </div>
+
+                <!-- Baris 2: Email -->
+                <div data-aos="fade-left" data-aos-delay="150">
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >Email</label
+                  >
+                  <div class="relative">
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-transparent transition-all duration-200"
+                      placeholder="nama@email.com"
+                      required
+                      value="{{ request.form.email if request.form }}"
+                    />
+                    <i
+                      class="fas fa-envelope text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2"
+                    ></i>
+                  </div>
+                </div>
+
+                <!-- Baris 3: Password dan Confirm Password -->
+                <div
+                  class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  data-aos="fade-right"
+                  data-aos-delay="200"
+                >
+                  <!-- Password -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"
+                      >Password</label
+                    >
+                    <div class="relative">
+                      <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-transparent transition-all duration-200"
+                        placeholder="••••••••"
+                        required
+                        minlength="6"
+                      />
+                      <i
+                        class="fas fa-lock text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2"
+                      ></i>
+                      <button
+                        type="button"
+                        class="toggle-password absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        <i class="fas fa-eye"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Confirm Password -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"
+                      >Confirm Password</label
+                    >
+                    <div class="relative">
+                      <input
+                        type="password"
+                        id="confirm_password"
+                        name="confirm_password"
+                        class="w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-transparent transition-all duration-200"
+                        placeholder="••••••••"
+                        required
+                        minlength="6"
+                      />
+                      <i
+                        class="fas fa-lock text-gray-400 absolute left-4 top-1/2 transform -translate-y-1/2"
+                      ></i>
+                      <button
+                        type="button"
+                        class="toggle-password absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        <i class="fas fa-eye"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Baris 4: Checkbox Setuju -->
+                <div data-aos="fade-up" data-aos-delay="250">
+                  <div class="flex items-start pt-2">
+                    <input
+                      type="checkbox"
+                      id="agree_terms"
+                      name="agree_terms"
+                      class="w-4 h-4 text-[#0a66c2] border-gray-300 rounded focus:ring-[#0a66c2] mt-1"
+                      required
+                    />
+                    <label for="agree_terms" class="ml-3 text-sm">
+                      <span class="text-gray-600">Saya setuju dengan </span>
+                      <a
+                        href="#"
+                        class="text-[#0a66c2] hover:text-[#004182] font-medium"
+                        >Syarat & Ketentuan</a
+                      >
+                      <span class="text-gray-600"> dan </span>
+                      <a
+                        href="#"
+                        class="text-[#0a66c2] hover:text-[#004182] font-medium"
+                        >Kebijakan Privasi</a
+                      >
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Button Buat Akun -->
+                <button
+                  type="submit"
+                  class="w-full linkedin-blue text-white py-3 rounded-lg font-medium transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl mt-4"
+                  data-aos="zoom-in"
+                  data-aos-delay="300"
+                >
+                  Buat Akun
+                </button>
+              </form>
+            </div>
+
+            <div
+              class="mt-4 text-center"
+              data-aos="fade-up"
+              data-aos-delay="350"
+            >
+              <p class="text-sm text-gray-600">
+                Sudah punya akun?
+                <a
+                  href="{{ url_for('login') }}"
+                  class="text-[#0a66c2] hover:text-[#004182] font-medium ml-1"
+                >
+                  Masuk di sini
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div
+        class="text-center mt-6 text-white/80"
+        data-aos="fade-up"
+        data-aos-delay="400"
+      >
+        <p class="text-sm">© 2024 LinkedIn. Semua hak dilindungi.</p>
+      </div>
+    </div>
+
+    <!-- AOS Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script>
+      // Inisialisasi AOS
+      AOS.init({
+        duration: 800,
+        once: true,
+        offset: 50,
+      });
+
+      // Password toggle functionality
+      document.querySelectorAll(".toggle-password").forEach((button) => {
+        button.addEventListener("click", function () {
+          const input = this.parentElement.querySelector("input");
+          const icon = this.querySelector("i");
+
+          if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+          } else {
+            input.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+          }
+        });
+      });
+
+      // Validasi form sebelum submit
+      document.querySelector("form").addEventListener("submit", function (e) {
+        const password = document.getElementById("password").value;
+        const confirmPassword =
+          document.getElementById("confirm_password").value;
+        const agreeTerms = document.getElementById("agree_terms").checked;
+
+        // Validasi password
+        if (password.length < 6) {
+          e.preventDefault();
+          alert("Password harus minimal 6 karakter");
+          return false;
+        }
+
+        // Validasi konfirmasi password
+        if (password !== confirmPassword) {
+          e.preventDefault();
+          alert("Password dan konfirmasi password tidak cocok");
+          return false;
+        }
+
+        // Validasi persetujuan
+        if (!agreeTerms) {
+          e.preventDefault();
+          alert(
+            "Anda harus menyetujui Syarat & Ketentuan dan Kebijakan Privasi"
+          );
+          return false;
+        }
+
+        return true;
+      });
+    </script>
+  </body>
+</html>

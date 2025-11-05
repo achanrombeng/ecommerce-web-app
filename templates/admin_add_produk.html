@@ -1,0 +1,256 @@
+{% extends "base-admin.html" %}
+
+{% block title %}Tambah Produk - LinkedCommerce{% endblock %}
+
+{% block page_title %}Tambah Produk{% endblock %}
+
+{% block page_icon %}plus-circle{% endblock %}
+
+{% block breadcrumb %}
+<li>
+  <div class="flex items-center">
+    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+    <a href="/admin/products" class="text-sm font-medium text-gray-500 hover:text-linkedin-blue">Produk</a>
+  </div>
+</li>
+<li>
+  <div class="flex items-center">
+    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+    <span class="text-sm font-medium text-gray-500">Tambah Produk</span>
+  </div>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Header Actions -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-aos="fade-up">
+    <div>
+      <h2 class="text-xl font-semibold text-gray-800">Tambah Produk Baru</h2>
+      <p class="text-sm text-gray-600 mt-1">Isi formulir di bawah untuk menambahkan produk baru ke toko online Anda</p>
+    </div>
+    <div class="flex space-x-2">
+      <a href="/admin/products" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg font-medium transition duration-200">
+        <i class="fas fa-arrow-left mr-2"></i>Kembali
+      </a>
+    </div>
+  </div>
+
+  <!-- Form Tambah Produk -->
+  <div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="100">
+    <form id="addProductForm">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Kolom Kiri -->
+        <div class="space-y-6">
+          <!-- Informasi Dasar -->
+          <div>
+            <h3 class="text-lg font-medium text-gray-800 mb-4">Informasi Dasar</h3>
+            
+            <!-- Nama Produk -->
+            <div class="mb-4">
+              <label for="productName" class="block text-sm font-medium text-gray-700 mb-1">Nama Produk</label>
+              <input
+                type="text"
+                id="productName"
+                placeholder="Masukkan nama produk"
+                class="w-full bg-linkedin-background rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                required
+              />
+            </div>
+            
+            
+            <!-- Kategori -->
+            <div class="mb-4">
+              <label for="productCategory" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+              <select 
+                id="productCategory" 
+                class="w-full bg-linkedin-background rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                required
+              >
+                <option value="">Pilih Kategori</option>
+                <option value="smartphone">Smartphone</option>
+                <option value="laptop">laptop</option>
+                <option value="aksesoris">aksesoris</option>
+                <option value="tablet">tablet</option>
+              </select>
+            </div>
+            
+            <!-- Deskripsi -->
+            <div class="mb-4">
+              <label for="productDescription" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi Produk</label>
+              <textarea
+                id="productDescription"
+                rows="4"
+                placeholder="Masukkan deskripsi produk"
+                class="w-full bg-linkedin-background rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+              ></textarea>
+            </div>
+          </div>
+          
+          <!-- Harga & Stok -->
+          <div>
+            <h3 class="text-lg font-medium text-gray-800 mb-4">Harga & Stok</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Harga -->
+              <div class="mb-4">
+                <label for="productPrice" class="block text-sm font-medium text-gray-700 mb-1">Harga (Rp)</label>
+                <input
+                  type="number"
+                  id="productPrice"
+                  placeholder="0"
+                  min="0"
+                  class="w-full bg-linkedin-background rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                  required
+                />
+              </div>
+              
+              <!-- Stok -->
+              <div class="mb-4">
+                <label for="productStock" class="block text-sm font-medium text-gray-700 mb-1">Stok</label>
+                <input
+                  type="number"
+                  id="productStock"
+                  placeholder="0"
+                  min="0"
+                  class="w-full bg-linkedin-background rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                  required
+                />
+              </div>
+            </div>
+            
+            <!-- Status -->
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Status Produk</label>
+              <div class="flex items-center space-x-4">
+                <label class="inline-flex items-center">
+                  <input type="radio" name="productStatus" value="active" class="text-linkedin-blue focus:ring-linkedin-blue" checked>
+                  <span class="ml-2 text-sm text-gray-700">Aktif</span>
+                </label>
+                <label class="inline-flex items-center">
+                  <input type="radio" name="productStatus" value="inactive" class="text-linkedin-blue focus:ring-linkedin-blue">
+                  <span class="ml-2 text-sm text-gray-700">Nonaktif</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Kolom Kanan -->
+        <div class="space-y-6">
+          <!-- Gambar Produk -->
+          <div>
+            <h3 class="text-lg font-medium text-gray-800 mb-4">Gambar Produk</h3>
+            
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <div id="imagePreview" class="mb-4 flex justify-center">
+                <i class="fas fa-image text-gray-400 text-4xl"></i>
+              </div>
+              <p class="text-sm text-gray-600 mb-2">Seret dan lepas gambar di sini atau klik untuk mengunggah</p>
+              <input
+                type="file"
+                id="productImage"
+                accept="image/*"
+                class="hidden"
+              />
+              <button 
+                type="button" 
+                id="uploadImageBtn" 
+                class="bg-linkedin-blue hover:bg-linkedin-dark text-white px-4 py-2 rounded-lg font-medium transition duration-200"
+              >
+                <i class="fas fa-upload mr-2"></i>Unggah Gambar
+              </button>
+              <p class="text-xs text-gray-500 mt-2">Format yang didukung: JPG, PNG, GIF. Maksimal 5MB</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tombol Aksi -->
+      <div class="flex justify-end space-x-3 pt-6 mt-6 border-t border-gray-200">
+        <button 
+          type="button" 
+          class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg font-medium transition duration-200"
+          onclick="window.location.href='/admin/products'"
+        >
+          Batal
+        </button>
+        <button 
+          type="submit" 
+          class="bg-linkedin-blue hover:bg-linkedin-dark text-white px-6 py-2 rounded-lg font-medium transition duration-200"
+        >
+          <i class="fas fa-save mr-2"></i>Simpan Produk
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Add product page loaded');
+  
+  // Handle image upload preview
+  const uploadImageBtn = document.getElementById('uploadImageBtn');
+  const productImage = document.getElementById('productImage');
+  const imagePreview = document.getElementById('imagePreview');
+  
+  uploadImageBtn.addEventListener('click', function() {
+    productImage.click();
+  });
+  
+  productImage.addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        imagePreview.innerHTML = `<img src="${e.target.result}" class="max-h-48 rounded-lg object-cover" alt="Preview">`;
+      }
+      
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  });
+  
+  // Handle form submission
+  const addProductForm = document.getElementById('addProductForm');
+  
+  addProductForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Validasi form
+    const productName = document.getElementById('productName').value;
+    const productSKU = document.getElementById('productSKU').value;
+    const productCategory = document.getElementById('productCategory').value;
+    const productPrice = document.getElementById('productPrice').value;
+    const productStock = document.getElementById('productStock').value;
+    
+    if (!productName || !productSKU || !productCategory || !productPrice || !productStock) {
+      alert('Harap isi semua field yang wajib diisi!');
+      return;
+    }
+    
+    // Simulasi pengiriman data
+    console.log('Form submitted with data:', {
+      name: productName,
+      sku: productSKU,
+      category: productCategory,
+      description: document.getElementById('productDescription').value,
+      price: productPrice,
+      stock: productStock,
+      status: document.querySelector('input[name="productStatus"]:checked').value,
+      weight: document.getElementById('productWeight').value,
+      dimensions: {
+        length: document.getElementById('productLength').value,
+        width: document.getElementById('productWidth').value,
+        height: document.getElementById('productHeight').value
+      },
+      tags: document.getElementById('productTags').value
+    });
+    
+    // Redirect ke halaman produk setelah berhasil
+    alert('Produk berhasil ditambahkan!');
+    window.location.href = '/admin/products';
+  });
+});
+</script>
+{% endblock %}

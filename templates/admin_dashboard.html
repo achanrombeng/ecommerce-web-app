@@ -1,0 +1,167 @@
+{% extends "base-admin.html" %}
+
+{% block title %}Admin Dashboard - LinkedCommerce{% endblock %}
+
+{% block page_title %}Dashboard Admin{% endblock %}
+
+{% block page_icon %}tachometer-alt{% endblock %}
+
+{% block breadcrumb %}
+<li>
+  <div class="flex items-center">
+    <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+    <span class="text-sm font-medium text-gray-500">Dashboard</span>
+  </div>
+</li>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <!-- Welcome Alert -->
+  <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4" data-aos="fade-up">
+    <div class="flex items-start">
+      <i class="fas fa-exclamation-circle text-yellow-500 mt-1 mr-3"></i>
+      <div>
+        <h5 class="font-semibold text-gray-800">Selamat Datang, Administrator!</h5>
+        <p class="text-sm text-gray-600 mt-1">Anda memiliki akses penuh untuk mengelola sistem dengan perlindungan token JWT.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6" data-aos="fade-up" data-aos-delay="100">
+    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-linkedin-blue">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Total Pengguna</p>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="totalUsers">0</h3>
+        </div>
+        <div class="bg-linkedin-background p-3 rounded-full">
+          <i class="fas fa-users text-linkedin-blue text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Pengguna Aktif</p>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="activeUsers">0</h3>
+        </div>
+        <div class="bg-green-50 p-3 rounded-full">
+          <i class="fas fa-user-check text-green-500 text-xl"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Administrator</p>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="adminUsers">0</h3>
+        </div>
+        <div class="bg-purple-50 p-3 rounded-full">
+          <i class="fas fa-shield-alt text-purple-500 text-xl"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Management Table -->
+  <div class="bg-white rounded-lg shadow" data-aos="fade-up" data-aos-delay="200">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800">Manajemen Pengguna</h3>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dibuat</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200" id="usersTableBody">
+          <tr>
+            <td colspan="6" class="px-6 py-4 text-center text-sm text-gray-500">
+              <i class="fas fa-spinner fa-spin mr-2"></i>Memuat data pengguna...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+async function loadUsers() {
+    try {
+        const response = await fetch('/api/users', {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            
+            let total = 0, active = 0, admins = 0;
+            
+            data.users.forEach(user => {
+                total++;
+                if (user.is_active) active++;
+                if (user.role === 'admin') admins++;
+                
+                const row = document.createElement('tr');
+                row.className = 'table-row';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${user.id}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${user.username}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${user.email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-linkedin-background text-linkedin-blue'}">
+                            ${user.role}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                            ${user.is_active ? 'Aktif' : 'Tidak Aktif'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${new Date(user.created_at).toLocaleDateString('id-ID')}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('totalUsers').textContent = total;
+            document.getElementById('activeUsers').textContent = active;
+            document.getElementById('adminUsers').textContent = admins;
+        } else {
+            document.getElementById('usersTableBody').innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-sm text-red-600">
+                        <i class="fas fa-exclamation-circle mr-2"></i>Error loading users
+                    </td>
+                </tr>
+            `;
+        }
+    } catch (error) {
+        console.error('Error loading users:', error);
+        document.getElementById('usersTableBody').innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-4 text-center text-sm text-red-600">
+                    <i class="fas fa-exclamation-circle mr-2"></i>Error loading users
+                </td>
+            </tr>
+        `;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadUsers);
+</script>
+{% endblock %}
