@@ -1,40 +1,62 @@
-{% extends "base-admin.html" %}
-
-{% block title %}Kelola Produk - LinkedCommerce{% endblock %}
-
-{% block page_title %}Kelola Produk{% endblock %}
-
-{% block page_icon %}cube{% endblock %}
-
-{% block breadcrumb %}
+{% extends "base-admin.html" %} {% block title %}Kelola Produk -
+LinkedCommerce{% endblock %} {% block page_title %}Kelola Produk{% endblock %}
+{% block page_icon %}cube{% endblock %} {% block breadcrumb %}
 <li>
   <div class="flex items-center">
     <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
     <span class="text-sm font-medium text-gray-500">Produk</span>
   </div>
 </li>
-{% endblock %}
-
-{% block content %}
+{% endblock %} {% block content %}
+<link
+  rel="stylesheet"
+  href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+/>
+<link
+  href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+  rel="stylesheet"
+/>
 <div class="space-y-6">
   <!-- Header Actions -->
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-aos="fade-up">
+  <div
+    class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+    data-aos="fade-up"
+  >
     <div>
       <h2 class="text-xl font-semibold text-gray-800">Daftar Produk</h2>
-      <p class="text-sm text-gray-600 mt-1">Kelola semua produk di toko online Anda</p>
+      <p class="text-sm text-gray-600 mt-1">
+        Kelola semua produk di toko online Anda
+      </p>
     </div>
-    <a class="bg-linkedin-blue hover:bg-linkedin-dark text-white px-4 py-2 rounded-lg font-medium transition duration-200" href="{{ url_for('admin_add_product') }}">
-      <i class="fas fa-plus mr-2"></i>Tambah Produk
-    </a>
   </div>
 
   <!-- Stats Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6" data-aos="fade-up" data-aos-delay="100">
-    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-linkedin-blue">
+  <div
+    class="grid grid-cols-1 md:grid-cols-4 gap-6"
+    data-aos="fade-up"
+    data-aos-delay="100"
+  >
+    <div
+      class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-linkedin-blue"
+    >
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-600">Total Produk</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1">156</h3>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="totalProducts">
+            0
+          </h3>
         </div>
         <div class="bg-linkedin-background p-3 rounded-full">
           <i class="fas fa-cube text-linkedin-blue text-xl"></i>
@@ -42,11 +64,15 @@
       </div>
     </div>
 
-    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+    <div
+      class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-green-500"
+    >
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-600">Produk Aktif</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1">142</h3>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="activeProducts">
+            0
+          </h3>
         </div>
         <div class="bg-green-50 p-3 rounded-full">
           <i class="fas fa-check-circle text-green-500 text-xl"></i>
@@ -54,11 +80,13 @@
       </div>
     </div>
 
-    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
+    <div
+      class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500"
+    >
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-600">Stok Menipis</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1">8</h3>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="lowStock">0</h3>
         </div>
         <div class="bg-yellow-50 p-3 rounded-full">
           <i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>
@@ -66,11 +94,15 @@
       </div>
     </div>
 
-    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
+    <div
+      class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-red-500"
+    >
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-600">Habis Stok</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1">6</h3>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="outOfStock">
+            0
+          </h3>
         </div>
         <div class="bg-red-50 p-3 rounded-full">
           <i class="fas fa-times-circle text-red-500 text-xl"></i>
@@ -79,120 +111,393 @@
     </div>
   </div>
 
-  <!-- Filters and Search -->
-  <div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="200">
-    <div class="flex flex-col md:flex-row gap-4">
-      <div class="flex-1">
-        <div class="relative">
-          <input
-            type="text"
-            placeholder="Cari produk..."
-            class="w-full bg-linkedin-background rounded-lg py-2 px-4 pl-10 focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-          />
-          <i class="fas fa-search absolute left-3 top-3 text-gray-500"></i>
+  <!-- Products Table -->
+  <div
+    class="bg-white rounded-lg shadow"
+    data-aos="fade-up"
+    data-aos-delay="200"
+  >
+    <div class="p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+          <i class="fas fa-list"></i> Daftar Produk
+        </h2>
+        <div class="gap-6">
+          <a
+            class="bg-linkedin-blue hover:bg-linkedin-dark text-white px-4 py-2 rounded-lg font-medium transition duration-200"
+            href="{{ url_for('admin_add_product') }}"
+          >
+            <i class="fas fa-plus mr-2"></i>Tambah Produk
+          </a>
+          <button
+            onclick="reloadTable()"
+            class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition"
+          >
+            <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
+          </button>
         </div>
       </div>
-      <select class="bg-linkedin-background rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-linkedin-blue">
-        <option>Semua Kategori</option>
-        <option>Elektronik</option>
-        <option>Fashion</option>
-        <option>Rumah Tangga</option>
-      </select>
-      <select class="bg-linkedin-background rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-linkedin-blue">
-        <option>Semua Status</option>
-        <option>Aktif</option>
-        <option>Nonaktif</option>
-      </select>
-    </div>
-  </div>
 
-  <!-- Products Table -->
-  <div class="bg-white rounded-lg shadow" data-aos="fade-up" data-aos-delay="300">
-    <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stok</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200" id="productsTableBody">
-          <!-- Product 1 -->
-          <tr class="table-row">
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex items-center">
-                <div class="h-10 w-10 flex-shrink-0">
-                  <img class="h-10 w-10 rounded-lg object-cover" src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aGVhZHBob25lfGVufDB8fDB8fHww&auto=format&fit=crop&w=100&q=80" alt="">
-                </div>
-                <div class="ml-4">
-                  <div class="text-sm font-medium text-gray-900">Headphone Wireless Premium</div>
-                  <div class="text-sm text-gray-500">SKU: HP-WL-001</div>
-                </div>
-              </div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Elektronik</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Rp 1.250.000</td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <div class="flex items-center">
-                <span class="text-sm font-medium text-gray-900 mr-2">45</span>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  <i class="fas fa-check mr-1"></i>Aman
-                </span>
-              </div>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Aktif
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-              <div class="flex space-x-2">
-                <a class="text-linkedin-blue hover:text-linkedin-dark" href="{{ url_for('admin_edit_product') }}">
-                  <i class="fas fa-edit"></i>
-                </a>
-                <button class="text-red-600 hover:text-red-900">
-                  <i class="fas fa-trash"></i>
-                </button>
-                <button class="text-gray-600 hover:text-gray-900">
-                  <i class="fas fa-eye"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+      <div class="overflow-x-auto">
+        <table id="productsTable" class="w-full">
+          <thead class="bg-gray-100 border-b border-gray-300">
+            <!-- Filter Row -->
+            <tr class="bg-gray-50">
+              <th class="px-4 py-3"></th>
+              <th class="px-4 py-3">
+                <input
+                  type="text"
+                  id="filterName"
+                  placeholder="Filter Nama"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                />
+              </th>
+              <th class="px-4 py-3">
+                <select
+                  id="filterCategory"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                >
+                  <option value="">Semua Kategori</option>
+                  <option value="smartphone">Smartphone</option>
+                  <option value="laptop">Laptop</option>
+                  <option value="aksesoris">Aksesoris</option>
+                  <option value="tablet">Tablet</option>
+                </select>
+              </th>
+              <th class="px-4 py-3">
+                <input
+                  type="number"
+                  id="filterPrice"
+                  placeholder="Max Harga"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                />
+              </th>
+              <th class="px-4 py-3">
+                <select
+                  id="filterStatus"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                >
+                  <option value="">Semua Status</option>
+                  <option value="aktif">Aktif</option>
+                  <option value="nonaktif">Non-aktif</option>
+                </select>
+              </th>
+              <th class="px-4 py-3"></th>
+            </tr>
 
-    <!-- Pagination -->
-    <div class="px-6 py-4 border-t border-gray-200">
-      <div class="flex items-center justify-between">
-        <div class="text-sm text-gray-700">
-          Menampilkan <span class="font-medium">1-3</span> dari <span class="font-medium">156</span> produk
-        </div>
-        <div class="flex space-x-2">
-          <button class="px-3 py-1 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <button class="px-3 py-1 rounded-lg bg-linkedin-blue text-white">1</button>
-          <button class="px-3 py-1 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">2</button>
-          <button class="px-3 py-1 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">3</button>
-          <button class="px-3 py-1 rounded-lg bg-gray-200 text-gray-600 hover:bg-gray-300">
-            <i class="fas fa-chevron-right"></i>
-          </button>
-        </div>
+            <!-- Header Row -->
+            <tr>
+              <th
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+              >
+                No
+              </th>
+              <th
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+              >
+                Nama Produk
+              </th>
+              <th
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+              >
+                Kategori
+              </th>
+              <th
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+              >
+                Harga
+              </th>
+              <th
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+              >
+                Status
+              </th>
+              <th
+                class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
+              >
+                Aksi
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <!-- Data will be populated by DataTables -->
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.tailwindcss.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-// JavaScript untuk mengelola produk bisa ditambahkan di sini
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('Products page loaded');
-});
+  let productTable;
+
+  const canUpdate = {{ can_update|tojson }};
+  const canDelete = {{ can_delete|tojson }};
+
+  // Update stats dari server
+  $(document).ready(function() {
+      $('#totalProducts').text({{ total_products }});
+      $('#activeProducts').text({{ active_products }});
+      $('#lowStock').text({{ low_stock }});
+      $('#outOfStock').text({{ out_of_stock }});
+  });
+
+  // Product Table
+  $(function() {
+    productTable = $('#productsTable').DataTable({
+      processing: true,
+      searching: false,
+      ordering: true,
+      pageLength: 10,
+      language: {
+        processing: "Memuat data...",
+        emptyTable: "Tidak ada data produk",
+        zeroRecords: "Tidak ada data yang sesuai filter"
+      },
+      createdRow: function(row, data, dataIndex) {
+        $(row).css(
+          "background-color",
+          dataIndex % 2 === 0 ? "#f9fafb" : "white"
+        )
+      },
+      ajax: {
+        url: "{{ url_for('admin_products') }}",
+        type: "POST",
+        data: function(d) {
+          // kirim filter ke backend
+          const filters = {
+            name: $('#filterName').val(),
+            category: $('#filterCategory').val(),
+            maxPrice: $('#filterPrice').val(),
+            status: $('#filterStatus').val()
+          };
+          console.log('Sending filters:', filters);
+          return filters;
+        },
+        dataSrc: function(json) {
+          console.log('Received data:', json);
+          return json.data;
+        },
+        error: function(xhr, error, code) {
+          console.error('Ajax Error:', error);
+          console.error('Status:', xhr.status);
+          console.error('Response:', xhr.responseText);
+
+          Swal.fire({
+            icon: 'error',
+            title: 'Error Memuat Data',
+            text: 'Status: ' + xhr.status + ' - ' + error,
+            footer: 'Periksa console untuk detail'
+          });
+        }
+      },
+      columns: [
+        {
+          data: null,
+          render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1,
+        },
+        {
+          data: "product_name",
+          render: function (data, type, row) {
+            var truncatedText =
+              data.length > 35 ? data.substring(0, 35) + "..." : data;
+            return '<span title="' + data + '">' + truncatedText + "</span>";
+          },
+        },
+        {
+          data: "product_category",
+          render: function (data, type, row) {
+            var truncatedText =
+              data.length > 35 ? data.substring(0, 35) + "..." : data;
+            return '<span title="' + data + '">' + truncatedText + "</span>";
+          },
+        },
+        {
+          data: "product_price",
+          render: function (data, type, row) {
+            return '<span>' + data + "</span>";
+          },
+        },
+        {
+          data: "product_status",
+          render: function (data, type, row) {
+            const statusColors = {
+              'Available': 'bg-green-100 text-green-800',
+              'Unavailable': 'bg-red-100 text-red-800',
+              'Out Of Stock': 'bg-yellow-100 text-yellow-800'
+            };
+            const colorClass = statusColors[data] || 'bg-gray-100 text-gray-800';
+            return `<span class="px-2 py-1 rounded-full text-xs font-medium ${colorClass}">${data}</span>`;
+          },
+        },
+        {
+          data: null,
+          render: function (data, type, row) {
+            let buttons = '';
+            if (canUpdate) {
+              buttons += `<button class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition" onclick="editProduct(${row.product_id})">
+                <i class="fas fa-edit mr-1"></i>Edit
+              </button>`;
+            }
+            if (canDelete) {
+              buttons += `<button class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 hover:bg-red-200 transition ml-2" onclick="deleteProduct(${row.product_id})">
+                <i class="fas fa-trash mr-1"></i>Hapus
+              </button>`;
+            }
+            return buttons || '<span class="text-gray-400 text-xs">Tidak ada aksi</span>';
+          },
+        },
+      ],
+    });
+
+    // Filter dengan debounce untuk input text dan number
+    let filterTimeout;
+    $('#filterName, #filterPrice').on('input', function() {
+      clearTimeout(filterTimeout);
+      filterTimeout = setTimeout(function() {
+        console.log('Reloading table with filters...');
+        productTable.ajax.reload();
+      }, 500);
+    });
+
+    // Filter langsung untuk select
+    $('#filterCategory, #filterStatus').on('change', function() {
+      console.log('Filter changed, reloading...');
+      productTable.ajax.reload();
+    });
+  });
+
+  // Function untuk edit product
+  function editProduct(id) {
+    if (!canUpdate) {
+      Swal.fire('Akses Ditolak', 'Anda tidak memiliki izin untuk mengedit produk', 'error');
+      return;
+    }
+    window.location.href = "{{ url_for('admin_edit_product', product_id=0) }}".replace('0', id);
+  }
+
+  // Function untuk delete product
+  // Function untuk delete product
+  function deleteProduct(id){
+    if (!canDelete) {
+      Swal.fire('Akses Ditolak', 'Anda tidak memiliki izin untuk menghapus produk', 'error');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Anda yakin ingin menghapus produk ini?',
+      text: "Data yang dihapus tidak dapat dikembalikan!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, hapus',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // ✅ PERBAIKAN: Sesuaikan dengan route backend
+        const deleteProductUrl = "{{ url_for('admin_delete_product', product_id=0) }}".replace('0', id);
+
+        console.log('Deleting product:', id);
+        console.log('URL:', deleteProductUrl);
+
+        fetch(deleteProductUrl, {
+          method: "DELETE",
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then((response) => {
+          console.log('Response status:', response.status);
+          return response.json();
+        })
+        .then((data) => {
+          console.log('Response data:', data);
+
+          if (data.success){
+            Swal.fire({
+              icon: 'success',
+              title: 'Berhasil',
+              text: data.message || "Produk berhasil dihapus",
+              timer: 2000,
+              showConfirmButton: false
+            }).then(() => {
+              // Reload halaman untuk update stats dan table
+              location.reload();
+            });
+          } else {
+            Swal.fire(
+               "Error",
+               data.message || "Gagal menghapus produk",
+               "error"
+              );
+          }
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+          Swal.fire(
+            "Error",
+            "Terjadi kesalahan saat menghapus produk: " + error.message,
+            "error"
+          );
+        });
+      }
+    });
+  }
+  // Function untuk reload table
+  function reloadTable() {
+    productTable.ajax.reload();
+    Swal.fire({
+      icon: 'success',
+      title: 'Data berhasil di-refresh',
+      showConfirmButton: false,
+      timer: 1500
+    });
+  }
 </script>
+
+<style>
+  #productsTable_wrapper .dataTables_length,
+  #productsTable_wrapper .dataTables_filter,
+  #productsTable_wrapper .dataTables_info,
+  #productsTable_wrapper .dataTables_paginate {
+    padding: 1rem;
+  }
+
+  #productsTable_wrapper .dataTables_filter input {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    margin-left: 0.5rem;
+  }
+
+  #productsTable_wrapper .dataTables_length select {
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    margin: 0 0.5rem;
+  }
+
+  .dataTables_paginate .paginate_button {
+    padding: 0.25rem 0.75rem;
+    margin: 0 0.25rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+  }
+
+  .dataTables_paginate .paginate_button.current {
+    background-color: #0a66c2;
+    color: white;
+    border-color: #0a66c2;
+  }
+
+  .dataTables_paginate .paginate_button:hover:not(.current) {
+    background-color: #f3f4f6;
+  }
+</style>
 {% endblock %}

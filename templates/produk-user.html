@@ -1,21 +1,26 @@
-{% extends "base.html" %} 
-
-{% block title %}Produk{% endblock %} 
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Produk{% endblock %} {% block content
+%}
 <!-- Page Content -->
 <main class="bg-white rounded-lg shadow p-4 md:p-6" data-aos="fade-up">
   <div id="productsContent" class="page-content">
     <!-- Filter & Sorting -->
     <div class="mb-6">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h3 class="text-xl font-bold text-gray-800">Semua Produk</h3>
-        
+      <div
+        class="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+      >
+        <h3 class="text-xl font-bold text-gray-800">
+          Semua Produk
+          <span class="text-sm font-normal text-gray-500"
+            >({{ products|length }} produk)</span
+          >
+        </h3>
+
         <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <!-- Search Bar -->
           <div class="relative order-first sm:order-none">
             <input
               type="search"
+              id="searchInput"
               placeholder="Cari produk..."
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
             />
@@ -33,21 +38,30 @@
               ></path>
             </svg>
           </div>
-          
+
           <!-- Filters -->
           <div class="flex gap-2">
-            <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1">
-              <option>Semua Kategori</option>
-              <option>Elektronik</option>
-              <option>Fashion</option>
-              <option>Aksesoris</option>
+            <select
+              id="categoryFilter"
+              class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1"
+            >
+              <option value="">Semua Kategori</option>
+              <option value="smartphone">Smartphone</option>
+              <option value="laptop">Laptop</option>
+              <option value="tablet">Tablet</option>
+              <option value="aksesoris">Aksesoris</option>
             </select>
-            
-            <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1">
-              <option>Urutkan</option>
-              <option>Harga Terendah</option>
-              <option>Harga Tertinggi</option>
-              <option>Terbaru</option>
+
+            <select
+              id="sortFilter"
+              class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1"
+            >
+              <option value="">Urutkan</option>
+              <option value="price-asc">Harga Terendah</option>
+              <option value="price-desc">Harga Tertinggi</option>
+              <option value="name-asc">Nama A-Z</option>
+              <option value="name-desc">Nama Z-A</option>
+              <option value="newest">Terbaru</option>
             </select>
           </div>
         </div>
@@ -55,52 +69,65 @@
     </div>
 
     <!-- Product Grid -->
-    <div class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-      <!-- Product Card 1 -->
-      <div class="product-card bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-300">
-        <div class="h-48 bg-gray-200 relative flex items-center justify-center">
-          <span class="absolute top-3 left-3 bg-emerald-500 text-white text-xs px-2 py-1 rounded">New</span>
-          <!-- Placeholder for product image -->
-          <div class="text-gray-400">Gambar Produk</div>
-        </div>
-        <div class="p-4">
-          <h4 class="font-medium text-gray-800 mb-2 line-clamp-2">Smartphone XYZ dengan Spesifikasi Tinggi</h4>
-          <div class="flex items-center justify-between">
-            <span class="text-emerald-600 font-bold">Rp 2.999.000</span>
-            <button
-              class="bg-emerald-500 text-white px-3 py-1 rounded text-sm hover:bg-emerald-600 transition-colors"
-            >
-              + Keranjang
-            </button>
+    <div
+      id="productGrid"
+      class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+    >
+      {% if products %} {% for product in products %}
+      <div
+        class="product-card bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-300"
+        data-name="{{ product.product_name|lower }}"
+        data-category="{{ product.product_category|lower }}"
+        data-price="{{ product.product_price }}"
+      >
+        <!-- Product Image -->
+        <div
+          class="h-48 bg-gray-200 relative flex items-center justify-center overflow-hidden"
+        >
+          {% if product.product_image %}
+          <img
+            src="{{ product.product_image }}"
+            alt="{{ product.product_name }}"
+            class="w-full h-full object-cover"
+          />
+          {% else %}
+          <div class="text-gray-400">
+            <i class="fas fa-image text-4xl"></i>
+            <p class="text-sm mt-2">No Image</p>
           </div>
-        </div>
-      </div>
+          {% endif %}
 
-      <!-- Product Card 2 -->
-      <div class="product-card bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-300">
-        <div class="h-48 bg-gray-200 relative flex items-center justify-center">
-          <span class="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded">Sale</span>
-          <!-- Placeholder for product image -->
-          <div class="text-gray-400">Gambar Produk</div>
-        </div>
-        <div class="p-4">
-          <h4 class="font-medium text-gray-800 mb-2 line-clamp-2">Laptop Gaming Performa Tinggi</h4>
-          <div class="flex items-center justify-between">
-            <span class="text-emerald-600 font-bold">Rp 8.999.000</span>
-            <button
-              class="bg-emerald-500 text-white px-3 py-1 rounded text-sm hover:bg-emerald-600 transition-colors"
+          <!-- Badge -->
+          {% if loop.index <= 3 %}
+          <span
+            class="absolute top-3 left-3 bg-emerald-500 text-white text-xs px-2 py-1 rounded"
+            >New</span
+          >
+          {% endif %}
+
+          <!-- Stock Badge -->
+          {% if product.product_stock == 0 %}
+          <span
+            class="absolute top-3 right-3 bg-red-500 text-white text-xs px-2 py-1 rounded"
+            >Habis</span
+          >
+          {% elif product.product_stock < 10 %}
+          <span
+            class="absolute top-3 right-3 bg-yellow-500 text-white text-xs px-2 py-1 rounded"
+            >Stok {{ product.product_stock }}</span
+          >
+          {% endif %}
+
+          <!-- Wishlist Button (optional) -->
+          <button
+            class="absolute top-3 right-3 bg-white rounded-full p-2 text-gray-400 hover:text-red-500 transition-colors shadow-md"
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              + Keranjang
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Product Card 3 -->
-      <div class="product-card bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-300">
-        <div class="h-48 bg-gray-200 relative flex items-center justify-center">
-          <button class="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -109,58 +136,227 @@
               ></path>
             </svg>
           </button>
-          <!-- Placeholder for product image -->
-          <div class="text-gray-400">Gambar Produk</div>
         </div>
-        <div class="p-4">
-          <h4 class="font-medium text-gray-800 mb-2 line-clamp-2">Headphone Wireless dengan Noise Cancelling</h4>
-          <div class="flex items-center justify-between">
-            <span class="text-emerald-600 font-bold">Rp 899.000</span>
-            <button
-              class="bg-emerald-500 text-white px-3 py-1 rounded text-sm hover:bg-emerald-600 transition-colors"
-            >
-              + Keranjang
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <!-- Product Card 4 -->
-      <div class="product-card bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-300">
-        <div class="h-48 bg-gray-200 relative flex items-center justify-center">
-          <button class="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-              ></path>
-            </svg>
-          </button>
-          <!-- Placeholder for product image -->
-          <div class="text-gray-400">Gambar Produk</div>
-        </div>
+        <!-- Product Info -->
         <div class="p-4">
-          <h4 class="font-medium text-gray-800 mb-2 line-clamp-2">Smart Watch dengan Fitur Kesehatan</h4>
-          <div class="flex items-center justify-between">
-            <span class="text-emerald-600 font-bold">Rp 1.299.000</span>
+          <!-- Category Badge -->
+          <span
+            class="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded mb-2"
+          >
+            {{ product.product_category|title if product.product_category else
+            'Umum' }}
+          </span>
+
+          <h4 class="font-medium text-gray-800 mb-2 line-clamp-2 min-h-[3rem]">
+            {{ product.product_name }}
+          </h4>
+
+          <div class="flex flex-col items-start gap-2 ">
+            <span class="text-emerald-600 font-bold">
+              Rp {{ product.product_price }}
+            </span>
+
+            {% if product.product_stock > 0 %}
             <button
+              onclick="addToCart({{ product.id }})"
               class="bg-emerald-500 text-white px-3 py-1 rounded text-sm hover:bg-emerald-600 transition-colors"
             >
               + Keranjang
             </button>
+            <button
+              onclick="window.location.href='/form-order-user?product_id={{ product.id }}'"
+              class="bg-emerald-500 text-white px-3 py-1 rounded text-sm hover:bg-emerald-600 transition-colors"
+            >
+              Pesan Sekarang
+            </button>
+            {% else %}
+            <button
+              disabled
+              class="bg-gray-300 text-gray-500 px-3 py-1 rounded text-sm cursor-not-allowed"
+            >
+              Habis
+            </button>
+            {% endif %}
           </div>
         </div>
       </div>
+      {% endfor %} {% else %}
+      <!-- Empty State -->
+      <div class="col-span-full text-center py-12">
+        <i class="fas fa-box-open text-6xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-600 mb-2">
+          Belum Ada Produk
+        </h3>
+        <p class="text-gray-500">Produk akan ditampilkan di sini</p>
+      </div>
+      {% endif %}
     </div>
-    
-    <!-- Load More Button -->
+
+    <!-- Load More Button (jika produk banyak) -->
+    {% if products|length > 12 %}
     <div class="mt-8 text-center">
-      <button class="bg-white border border-emerald-500 text-emerald-500 px-6 py-2 rounded-lg hover:bg-emerald-50 transition-colors">
+      <button
+        id="loadMoreBtn"
+        class="bg-white border border-emerald-500 text-emerald-500 px-6 py-2 rounded-lg hover:bg-emerald-50 transition-colors"
+      >
         Muat Lebih Banyak
       </button>
     </div>
+    {% endif %}
   </div>
 </main>
+
+<!-- JavaScript untuk Filter & Search -->
+<!-- JavaScript untuk Filter & Search -->
+<script>
+  // Storage fallback untuk mencegah error tracking prevention
+  (function() {
+    try {
+      localStorage.setItem('test', 'test');
+      localStorage.removeItem('test');
+    } catch(e) {
+      // Jika localStorage diblokir, buat fallback
+      window.localStorage = {
+        _data: {},
+        setItem: function(id, val) { return this._data[id] = String(val); },
+        getItem: function(id) { return this._data.hasOwnProperty(id) ? this._data[id] : undefined; },
+        removeItem: function(id) { return delete this._data[id]; },
+        clear: function() { return this._data = {}; }
+      };
+    }
+  })();
+
+  // Search functionality
+  const searchInput = document.getElementById("searchInput");
+  const categoryFilter = document.getElementById("categoryFilter");
+  const sortFilter = document.getElementById("sortFilter");
+  const productCards = document.querySelectorAll(".product-card");
+
+  function filterProducts() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedCategory = categoryFilter.value.toLowerCase();
+
+    let visibleCards = Array.from(productCards).filter((card) => {
+      const name = card.dataset.name;
+      const category = card.dataset.category;
+
+      const matchesSearch = name.includes(searchTerm);
+      const matchesCategory = !selectedCategory || category === selectedCategory;
+
+      const isVisible = matchesSearch && matchesCategory;
+      card.style.display = isVisible ? "block" : "none";
+
+      return isVisible;
+    });
+
+    // Apply sorting
+    sortProducts(visibleCards);
+
+    // Show empty state if no results
+    const productGrid = document.getElementById("productGrid");
+    const existingEmptyState = productGrid.querySelector(".empty-state");
+
+    if (visibleCards.length === 0 && !existingEmptyState) {
+      const emptyState = document.createElement("div");
+      emptyState.className = "empty-state col-span-full text-center py-12";
+      emptyState.innerHTML = `
+        <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-semibold text-gray-600 mb-2">Produk Tidak Ditemukan</h3>
+        <p class="text-gray-500">Coba kata kunci lain atau ubah filter</p>
+      `;
+      productGrid.appendChild(emptyState);
+    } else if (visibleCards.length > 0 && existingEmptyState) {
+      existingEmptyState.remove();
+    }
+  }
+
+  function sortProducts(cards) {
+    const sortValue = sortFilter.value;
+    const productGrid = document.getElementById("productGrid");
+
+    if (!sortValue) return;
+
+    cards.sort((a, b) => {
+      const priceA = parseFloat(a.dataset.price);
+      const priceB = parseFloat(b.dataset.price);
+      const nameA = a.dataset.name;
+      const nameB = b.dataset.name;
+
+      switch (sortValue) {
+        case "price-asc":
+          return priceA - priceB;
+        case "price-desc":
+          return priceB - priceA;
+        case "name-asc":
+          return nameA.localeCompare(nameB);
+        case "name-desc":
+          return nameB.localeCompare(nameA);
+        default:
+          return 0;
+      }
+    });
+
+    // Reorder cards in DOM
+    cards.forEach((card) => productGrid.appendChild(card));
+  }
+
+  // Event listeners
+  if (searchInput) {
+    searchInput.addEventListener("input", filterProducts);
+  }
+  
+  if (categoryFilter) {
+    categoryFilter.addEventListener("change", filterProducts);
+  }
+  
+  if (sortFilter) {
+    sortFilter.addEventListener("change", () => {
+      const visibleCards = Array.from(productCards).filter(
+        (card) => card.style.display !== "none"
+      );
+      sortProducts(visibleCards);
+    });
+  }
+
+  // Add to cart function
+  function addToCart(productId) {
+    console.log("Adding product to cart:", productId);
+
+    // Check if SweetAlert2 is available
+    if (typeof Swal !== "undefined") {
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil!",
+        text: "Produk ditambahkan ke keranjang",
+        timer: 1500,
+        showConfirmButton: false
+      });
+    } else {
+      alert("Produk ditambahkan ke keranjang");
+    }
+
+    // TODO: Send to backend
+    // fetch('/cart/add', {
+    //   method: 'POST',
+    //   headers: {'Content-Type': 'application/json'},
+    //   body: JSON.stringify({product_id: productId})
+    // })
+    // .then(response => response.json())
+    // .then(data => {
+    //   if (data.success) {
+    //     // Update cart count, etc
+    //   }
+    // });
+  }
+
+  // Load more functionality (if implemented)
+  const loadMoreBtn = document.getElementById("loadMoreBtn");
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener("click", function () {
+      console.log("Load more products...");
+      // TODO: Implement pagination
+    });
+  }
+</script>
 {% endblock %}

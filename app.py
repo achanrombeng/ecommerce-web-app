@@ -1,8 +1,12 @@
 from datetime import datetime
+import traceback
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
-from models import Product, User, db
+import magic
+from sqlalchemy import func
+from sqlalchemy.orm import joinedload
+from models import Image, Product, User, db
 import os
 from dotenv import load_dotenv
 
@@ -124,81 +128,260 @@ def admin_dashboard():
     users = db.session.query(User).all()
     return render_template('admin_dashboard.html', users=users)
 
-@app.route('/admin/products')
+from sqlalchemy import func
+
+@app.route('/admin/products', methods=['GET', 'POST'])
 @login_required
 def admin_products():
-    return render_template('admin_produk.html')
+    if request.method == 'POST':
+        try:
+            print("\n" + "=" * 60)
+            print("POST REQUEST RECEIVED")
+            print("=" * 60)
+            
+            # Ambil parameter filter dari request
+            name_filter = request.form.get('name', '').strip()
+            category_filter = request.form.get('category', '').strip()
+            max_price_filter = request.form.get('maxPrice', '').strip()
+            status_filter = request.form.get('status', '').strip()
+            
+            print(f"Filters:")
+            print(f"  Name: '{name_filter}'")
+            print(f"  Category: '{category_filter}'")
+            print(f"  MaxPrice: '{max_price_filter}'")
+            print(f"  Status: '{status_filter}'")
+            
+            # Query database dengan filter
+            query = db.session.query(Product)
+            
+            # Debug: Cek total sebelum filter
+            total_in_db = query.count()
+            print(f"\nTotal products in database: {total_in_db}")
+            
+            if total_in_db == 0:
+                print("⚠️  WARNING: Database is EMPTY!")
+                return jsonify({'data': []})
+            
+            # Apply filters
+            if name_filter:
+                query = query.filter(func.lower(Product.product_name).like(f'%{name_filter.lower()}%'))
+                print(f"  After name filter: {query.count()} products")
+            
+            if category_filter:
+                query = query.filter(func.lower(Product.product_category).like(f'%{category_filter.lower()}%'))
+                print(f"  After category filter: {query.count()} products")
+            
+            if max_price_filter:
+                try:
+                    max_price = float(max_price_filter)
+                    query = query.filter(Product.product_price <= max_price)
+                    print(f"  After price filter (<= {max_price}): {query.count()} products")
+                except ValueError:
+                    print(f"  Invalid price: {max_price_filter}")
+            
+            # Filter status - BOOLEAN bukan string!
+            if status_filter:
+                if status_filter.lower() == 'aktif':
+                    query = query.filter(Product.product_status == True)
+                    print(f"  After status filter (True): {query.count()} products")
+                elif status_filter.lower() == 'nonaktif':
+                    query = query.filter(Product.product_status == False)
+                    print(f"  After status filter (False): {query.count()} products")
+            
+            # Get results
+            products = query.order_by(Product.id.desc()).all()
+            
+            print(f"\n✓ Found {len(products)} products after all filters")
+            
+            # Format data untuk DataTables
+            data = []
+            for i, product in enumerate(products):
+                # Konversi status Boolean ke display string
+                if product.product_status == True:
+                    display_status = 'Available'
+                elif product.product_status == False:
+                    display_status = 'Unavailable'
+                else:
+                    display_status = 'Unknown'
+                
+                # Override jika stok habis
+                if product.product_stock == 0:
+                    display_status = 'Out Of Stock'
+                
+                product_data = {
+                    'product_id': product.id,
+                    'product_name': product.product_name,
+                    'product_category': product.product_category or 'Tidak ada kategori',
+                    'product_price': product.product_price,
+                    'product_status': display_status
+                }
+                data.append(product_data)
+                
+                # Print first 2 products as sample
+                if i < 2:
+                    print(f"\nSample Product #{i+1}:")
+                    print(f"  ID: {product.id}")
+                    print(f"  Name: {product.product_name}")
+                    print(f"  Category: {product.product_category}")
+                    print(f"  Price: {product.product_price}")
+                    print(f"  Stock: {product.product_stock}")
+                    print(f"  Status (Boolean): {product.product_status}")
+                    print(f"  Status Display: {display_status}")
+            
+            response_data = {'data': data}
+            print(f"\n✓ Sending response with {len(data)} products")
+            print("=" * 60 + "\n")
+            
+            return jsonify(response_data)
+            
+        except Exception as e:
+            print("\n" + "!" * 60)
+            print("ERROR in POST request:")
+            print("!" * 60)
+            print(traceback.format_exc())
+            print("!" * 60 + "\n")
+            return jsonify({
+                'data': [],
+                'error': str(e)
+            }), 500
+    
+    # GET request - tampilkan halaman
+    try:
+        print("\n" + "=" * 60)
+        print("GET REQUEST - Loading Page")
+        print("=" * 60)
+        
+        # Hitung statistik
+        total_products = db.session.query(Product).count()
+        print(f"Total products: {total_products}")
+        
+        # Produk aktif (status = True)
+        active_products = db.session.query(Product).filter(
+            Product.product_status == True
+        ).count()
+        print(f"Active products (status=True): {active_products}")
+        
+        # Stok menipis (stok < 10 dan > 0)
+        low_stock = db.session.query(Product).filter(
+            Product.product_stock < 10,
+            Product.product_stock > 0
+        ).count()
+        print(f"Low stock: {low_stock}")
+        
+        # Habis stok (stok = 0)
+        out_of_stock = db.session.query(Product).filter(
+            Product.product_stock == 0
+        ).count()
+        print(f"Out of stock: {out_of_stock}")
+        
+        print("=" * 60 + "\n")
+        
+        # Permission check
+        can_update = True
+        can_delete = True
+        
+        return render_template('admin_produk.html',
+                             total_products=total_products,
+                             active_products=active_products,
+                             low_stock=low_stock,
+                             out_of_stock=out_of_stock,
+                             can_update=can_update,
+                             can_delete=can_delete)
+                             
+    except Exception as e:
+        print("\n" + "!" * 60)
+        print("ERROR in GET request:")
+        print("!" * 60)
+        print(traceback.format_exc())
+        print("!" * 60 + "\n")
+        return f"Error: {str(e)}", 500
+@app.route('/admin/products/delete/<int:product_id>', methods=['DELETE'])
+@login_required
+def admin_delete_product(product_id):
+    try:
+        print(f"\n{'='*60}")
+        print(f"DELETE REQUEST for product_id: {product_id}")
+        print(f"{'='*60}")
+        
+        product = db.session.query(Product).filter_by(id=product_id).first()
+        
+        if not product:
+            print(f"⚠️  Product with ID {product_id} not found")
+            return jsonify({
+                'success': False, 
+                'message': 'Produk tidak ditemukan!'
+            }), 404
+        
+        product_name = product.product_name
+        print(f"Found product: {product_name}")
+        
+        # Hapus file gambar jika ada
+        if product.product_image:
+            try:
+                image_path = os.path.join(app.config['UPLOAD_FOLDER'], product.product_image)
+                if os.path.exists(image_path):
+                    os.remove(image_path)
+                    print(f"✓ Image deleted: {image_path}")
+            except Exception as e:
+                print(f"⚠️  Error deleting image: {e}")
+        
+        db.session.delete(product)
+        db.session.commit()
+        
+        print(f"✓ Product '{product_name}' deleted successfully")
+        print(f"{'='*60}\n")
+
+        return jsonify({
+            'success': True, 
+            'message': f'Produk "{product_name}" berhasil dihapus!'
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        
+        print(f"\n{'!'*60}")
+        print(f"ERROR deleting product {product_id}:")
+        print(f"{'!'*60}")
+        import traceback
+        print(traceback.format_exc())
+        print(f"{'!'*60}\n")
+        
+        return jsonify({
+            'success': False, 
+            'message': f'Terjadi kesalahan: {str(e)}'
+        }), 500
+    
+    finally:
+        db.session.close()
 
 @app.route('/admin/add-product', methods=['GET', 'POST'])
 @login_required
 def admin_add_product():
     if request.method == 'POST':
         try:
+            # Ambil data dari form
             product_name = request.form.get('product_name')
             product_description = request.form.get('product_description')
             product_category = request.form.get('product_category')
             product_price = request.form.get('product_price')
             product_stock = request.form.get('product_stock')
-            product_status = request.form.get('product_status', 'available')
-
-             # Handle upload gambar menjadi base64
-            product_image = None
-            if 'product_image' in request.files:
-                image_file = request.files['product_image']
-                if image_file and image_file.filename != '':
-                    # Validasi tipe file
-                    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-                    if '.' in image_file.filename and \
-                       image_file.filename.rsplit('.', 1)[1].lower() in allowed_extensions:
-                        
-                        # Baca file dan konversi ke base64
-                        import base64
-                        
-                        # Baca file sebagai binary
-                        image_data = image_file.read()
-                        
-                        # Encode ke base64
-                        base64_encoded = base64.b64encode(image_data).decode('utf-8')
-                        
-                        # Dapatkan content type
-                        from werkzeug.utils import secure_filename
-                        filename = secure_filename(image_file.filename)
-                        file_extension = filename.rsplit('.', 1)[1].lower() if '.' in filename else 'jpeg'
-                        
-                        # Mapping extension ke MIME type
-                        mime_types = {
-                            'png': 'image/png',
-                            'jpg': 'image/jpeg',
-                            'jpeg': 'image/jpeg',
-                            'gif': 'image/gif',
-                            'webp': 'image/webp'
-                        }
-                        
-                        mime_type = mime_types.get(file_extension, 'image/jpeg')
-                        
-                        # Format base64 string untuk disimpan di database
-                        product_image = f"data:{mime_type};base64,{base64_encoded}"
-                        
-                        # Validasi ukuran file (max 5MB)
-                        if len(image_data) > 5 * 1024 * 1024:
-                            flash('Ukuran gambar terlalu besar. Maksimal 5MB.', 'error')
-                            return render_template('admin_add_produk.html')
-                    else:
-                        flash('Format file tidak didukung. Gunakan PNG, JPG, JPEG, GIF, atau WebP.', 'error')
-                        return render_template('admin_add_produk.html')
+            product_status = request.form.get('product_status', '1')
 
             # Validasi data wajib
-            if not product_name or not product_price:
-                flash('Nama produk dan harga harus diisi!', 'error')
+            if not product_name or not product_price or not product_category:
+                flash('Nama produk, harga, dan kategori harus diisi!', 'error')
                 return render_template('admin_add_produk.html')
             
-              # Konversi tipe data
+            # Konversi tipe data
             try:
                 product_price = int(product_price)
                 product_stock = int(product_stock) if product_stock else 0
             except ValueError:
                 flash('Harga dan stok harus berupa angka!', 'error')
                 return render_template('admin_add_produk.html')
+
+            # Handle product_status
+            product_status_bool = product_status == '1'
 
             # Buat product baru
             new_product = Product(
@@ -207,21 +390,81 @@ def admin_add_product():
                 product_category=product_category,
                 product_price=product_price,
                 product_stock=product_stock,
-                product_status=product_status,
-                product_image=product_image,
+                product_status=product_status_bool,
+                
                 created_at=datetime.now()
             )
 
+            
+            
+            # Handle upload gambar
+            image_uploaded = False
+            if 'product_image' in request.files:
+                image_file = request.files['product_image']
+                if image_file and image_file.filename != '':
+                    # Validasi tipe file
+                    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+                    if '.' in image_file.filename and \
+                       image_file.filename.rsplit('.', 1)[1].lower() in allowed_extensions:
+                        
+                        # Baca file sebagai binary
+                        image_data = image_file.read()
+                        
+                        # Validasi ukuran file (max 5MB)
+                        if len(image_data) > 5 * 1024 * 1024:
+                            flash('Ukuran gambar terlalu besar. Maksimal 5MB.', 'error')
+                            db.session.rollback()
+                            return render_template('admin_add_produk.html')
+                        
+                        from werkzeug.utils import secure_filename
+                        import base64
+                        
+                        filename = secure_filename(image_file.filename)
+                        file_size = len(image_data)
+                        file_extension = filename.rsplit('.', 1)[1].lower() if '.' in filename else 'jpeg'
+                        
+                        mime_types = {
+                            'png': 'image/png',
+                            'jpg': 'image/jpeg',
+                            'jpeg': 'image/jpeg',
+                            'gif': 'image/gif',
+                            'webp': 'image/webp'
+                        }
+                        
+                        file_type = mime_types.get(file_extension, 'image/jpeg')
+
+                        
+                        
+                        # Untuk tabel Image (simpan sebagai base64 string)
+                        
+                        
+                        new_image = Image(
+                            product_id=new_product.id,
+                            file_data=image_data,
+                            file_name=filename,
+                            file_size=file_size,
+                            file_type=file_type
+                        )
+
+                        new_product.images.append(new_image)
+                        image_uploaded = True
+                    else:
+                        flash('Format file tidak didukung. Gunakan PNG, JPG, JPEG, GIF, atau WebP.', 'error')
+                        db.session.rollback()
+                        return render_template('admin_add_produk.html')
             db.session.add(new_product)
             db.session.commit()
-
             flash('Produk berhasil ditambahkan!', 'success')
             return redirect(url_for('admin_products'))
+            
         except Exception as e:
             db.session.rollback()
             print(f"Error adding product: {e}")
+            import traceback
+            traceback.print_exc()
             flash('Error menambahkan produk: ' + str(e), 'error')
-    return render_template('admin_add_produk.html')   
+    
+    return render_template('admin_add_produk.html') 
 
 @app.route('/admin/edit-product', methods=['GET', 'POST'])
 @login_required
@@ -298,9 +541,73 @@ with app.app_context():
             db.session.rollback()
         finally:
             db.session.close()
+import base64
+
 @app.route('/produk-user')
+@login_required
 def produk_user():
-    return render_template('produk-user.html')
+    try:
+        products = db.session.query(Product).options(joinedload(Product.images)).all()
+        
+        # Process each product to handle memoryview/image data
+        processed_products = []
+        for product in products:
+            product_data = {
+                'id': product.id,
+                'product_name': product.product_name,
+                'product_price': product.product_price,
+                'product_stock': product.product_stock,
+                'product_category': product.product_category,
+                'product_image': None  # Default None
+            }
+
+            # Ambil gambar pertama jika ada
+            if product.images and len(product.images) > 0:
+                first_image = product.images[0]
+                if first_image.file_data:
+                    # Convert memoryview to bytes if necessary
+                    image_bytes = bytes(first_image.file_data)
+                    
+                    # Detect MIME type
+                    mime_type = detect_mime_type(image_bytes)
+                    
+                    # Encode to base64 for embedding in HTML
+                    base64_image = base64.b64encode(image_bytes).decode('utf-8')
+                    product_data['product_image'] = f'data:{mime_type};base64,{base64_image}'
+            
+            processed_products.append(product_data)
+        
+        return render_template('produk-user.html', products=processed_products)
+        
+    except Exception as e:
+        print(f"Error loading products: {e}")
+        import traceback
+        traceback.print_exc()
+        return render_template('produk-user.html', products=[])
+
+
+# Helper function untuk deteksi MIME type
+def detect_mime_type(image_bytes):
+    """Deteksi MIME type dari file signature"""
+    # Check file signatures (magic numbers)
+    if image_bytes.startswith(b'\xff\xd8\xff'):
+        return 'image/jpeg'
+    elif image_bytes.startswith(b'\x89PNG\r\n\x1a\n'):
+        return 'image/png'
+    elif image_bytes.startswith(b'GIF87a') or image_bytes.startswith(b'GIF89a'):
+        return 'image/gif'
+    elif image_bytes.startswith(b'RIFF') and image_bytes[8:12] == b'WEBP':
+        return 'image/webp'
+    elif image_bytes.startswith(b'BM'):
+        return 'image/bmp'
+    else:
+        # Default fallback
+        return 'image/jpeg'
+    
+@app.route('/form-order-user')
+@login_required
+def form_order_user():
+    return render_template('form_order_user.html')
 
 @app.route('/order-user')
 def order_user():

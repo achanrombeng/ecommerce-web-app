@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+{% block title %}Form Order{% endblock %}
+{% block content %}
+
+<!-- Page Content -->
+<main class="bg-white rounded-lg shadow p-4 md:p-6" data-aos="fade-up">
+  <div id="orderContent" class="page-content">
+    <!-- Header -->
+    <div class="mb-6">
+      <h3 class="text-xl font-bold text-gray-800 mb-2">Form Pemesanan</h3>
+      <p class="text-sm text-gray-500">Lengkapi data di bawah untuk melakukan pemesanan</p>
+    </div>
+
+    <form id="orderForm" class="space-y-6">
+      <!-- Informasi Pemesan -->
+      <div class="bg-gray-50 rounded-lg p-4 md:p-6">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <i class="fas fa-user-circle mr-2 text-emerald-500"></i>
+          Informasi Pemesan
+        </h4>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Nama Lengkap -->
+          <div>
+            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-2">
+              Nama Lengkap <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="fullName"
+              name="fullName"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              placeholder="Masukkan nama lengkap"
+            />
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+              Email <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              placeholder="contoh@email.com"
+            />
+          </div>
+
+          <!-- No. Telepon -->
+          <div>
+            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+              No. Telepon <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              placeholder="08xxxxxxxxxx"
+            />
+          </div>
+
+          <!-- Kota -->
+          <div>
+            <label for="city" class="block text-sm font-medium text-gray-700 mb-2">
+              Kota <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="city"
+              name="city"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              placeholder="Masukkan kota"
+            />
+          </div>
+        </div>
+
+        <!-- Alamat Lengkap -->
+        <div class="mt-4">
+          <label for="address" class="block text-sm font-medium text-gray-700 mb-2">
+            Alamat Lengkap <span class="text-red-500">*</span>
+          </label>
+          <textarea
+            id="address"
+            name="address"
+            required
+            rows="3"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            placeholder="Masukkan alamat lengkap untuk pengiriman"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Detail Produk -->
+      <div class="bg-gray-50 rounded-lg p-4 md:p-6">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <i class="fas fa-shopping-bag mr-2 text-emerald-500"></i>
+          Detail Produk
+        </h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Pilih Produk -->
+          <div>
+            <label for="product" class="block text-sm font-medium text-gray-700 mb-2">
+              Pilih Produk <span class="text-red-500">*</span>
+            </label>
+            <select
+              id="product"
+              name="product"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            >
+              <option value="">-- Pilih Produk --</option>
+              <option value="1" data-price="5000000">iPhone 14 Pro - Rp 5.000.000</option>
+              <option value="2" data-price="15000000">MacBook Pro M2 - Rp 15.000.000</option>
+              <option value="3" data-price="8000000">iPad Air - Rp 8.000.000</option>
+              <option value="4" data-price="300000">AirPods Pro - Rp 300.000</option>
+            </select>
+          </div>
+
+          <!-- Jumlah -->
+          <div>
+            <label for="quantity" class="block text-sm font-medium text-gray-700 mb-2">
+              Jumlah <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              id="quantity"
+              name="quantity"
+              min="1"
+              value="1"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        <!-- Catatan Tambahan -->
+        <div class="mt-4">
+          <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+            Catatan Tambahan (Opsional)
+          </label>
+          <textarea
+            id="notes"
+            name="notes"
+            rows="2"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            placeholder="Tambahkan catatan untuk pesanan Anda"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Metode Pembayaran -->
+      <div class="bg-gray-50 rounded-lg p-4 md:p-6">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <i class="fas fa-credit-card mr-2 text-emerald-500"></i>
+          Metode Pembayaran
+        </h4>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <label class="payment-option cursor-pointer">
+            <input type="radio" name="payment" value="transfer" required class="hidden peer" />
+            <div class="border-2 border-gray-300 rounded-lg p-4 text-center hover:border-emerald-500 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-all">
+              <i class="fas fa-university text-2xl text-emerald-500 mb-2"></i>
+              <p class="font-medium text-gray-700">Transfer Bank</p>
+            </div>
+          </label>
+
+          <label class="payment-option cursor-pointer">
+            <input type="radio" name="payment" value="cod" required class="hidden peer" />
+            <div class="border-2 border-gray-300 rounded-lg p-4 text-center hover:border-emerald-500 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-all">
+              <i class="fas fa-hand-holding-usd text-2xl text-emerald-500 mb-2"></i>
+              <p class="font-medium text-gray-700">COD</p>
+            </div>
+          </label>
+
+          <label class="payment-option cursor-pointer">
+            <input type="radio" name="payment" value="ewallet" required class="hidden peer" />
+            <div class="border-2 border-gray-300 rounded-lg p-4 text-center hover:border-emerald-500 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-all">
+              <i class="fas fa-wallet text-2xl text-emerald-500 mb-2"></i>
+              <p class="font-medium text-gray-700">E-Wallet</p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Ringkasan Order -->
+      <div class="bg-emerald-50 rounded-lg p-4 md:p-6 border border-emerald-200">
+        <h4 class="text-lg font-semibold text-gray-800 mb-4">Ringkasan Pesanan</h4>
+        
+        <div class="space-y-2">
+          <div class="flex justify-between text-gray-700">
+            <span>Subtotal:</span>
+            <span id="subtotal" class="font-medium">Rp 0</span>
+          </div>
+          <div class="flex justify-between text-gray-700">
+            <span>Ongkos Kirim:</span>
+            <span id="shipping" class="font-medium">Rp 0</span>
+          </div>
+          <div class="border-t border-emerald-300 pt-2 mt-2">
+            <div class="flex justify-between text-lg font-bold text-gray-800">
+              <span>Total:</span>
+              <span id="total" class="text-emerald-600">Rp 0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button
+          type="button"
+          onclick="window.history.back()"
+          class="flex-1 bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+        >
+          <i class="fas fa-arrow-left mr-2"></i>
+          Kembali
+        </button>
+        <button
+          type="submit"
+          class="flex-1 bg-emerald-500 text-white px-6 py-3 rounded-lg hover:bg-emerald-600 transition-colors font-medium"
+        >
+          <i class="fas fa-check-circle mr-2"></i>
+          Proses Pesanan
+        </button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<!-- JavaScript -->
+<script>
+  // Storage fallback
+  (function() {
+    try {
+      localStorage.setItem('test', 'test');
+      localStorage.removeItem('test');
+    } catch(e) {
+      window.localStorage = {
+        _data: {},
+        setItem: function(id, val) { return this._data[id] = String(val); },
+        getItem: function(id) { return this._data.hasOwnProperty(id) ? this._data[id] : undefined; },
+        removeItem: function(id) { return delete this._data[id]; },
+        clear: function() { return this._data = {}; }
+      };
+    }
+  })();
+
+  // Calculate order summary
+  const productSelect = document.getElementById('product');
+  const quantityInput = document.getElementById('quantity');
+  const subtotalEl = document.getElementById('subtotal');
+  const shippingEl = document.getElementById('shipping');
+  const totalEl = document.getElementById('total');
+
+  function calculateTotal() {
+    const selectedOption = productSelect.options[productSelect.selectedIndex];
+    const price = parseFloat(selectedOption.dataset.price || 0);
+    const quantity = parseInt(quantityInput.value || 0);
+    const shipping = 25000; // Fixed shipping cost
+
+    const subtotal = price * quantity;
+    const total = subtotal + (subtotal > 0 ? shipping : 0);
+
+    subtotalEl.textContent = formatCurrency(subtotal);
+    shippingEl.textContent = subtotal > 0 ? formatCurrency(shipping) : 'Rp 0';
+    totalEl.textContent = formatCurrency(total);
+  }
+
+  function formatCurrency(amount) {
+    return 'Rp ' + amount.toLocaleString('id-ID');
+  }
+
+  productSelect.addEventListener('change', calculateTotal);
+  quantityInput.addEventListener('input', calculateTotal);
+
+  // Form submission
+  document.getElementById('orderForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = {
+      fullName: document.getElementById('fullName').value,
+      email: document.getElementById('email').value,
+      phone: document.getElementById('phone').value,
+      city: document.getElementById('city').value,
+      address: document.getElementById('address').value,
+      product: productSelect.options[productSelect.selectedIndex].text,
+      quantity: quantityInput.value,
+      notes: document.getElementById('notes').value,
+      payment: document.querySelector('input[name="payment"]:checked')?.value,
+      total: totalEl.textContent
+    };
+
+    console.log('Order Data:', formData);
+
+    // Show success message
+    if (typeof Swal !== 'undefined') {
+      Swal.fire({
+        icon: 'success',
+        title: 'Pesanan Berhasil!',
+        text: 'Terima kasih telah melakukan pemesanan. Kami akan segera memproses pesanan Anda.',
+        confirmButtonColor: '#10b981',
+        confirmButtonText: 'OK'
+      }).then(() => {
+        // Reset form or redirect
+        // window.location.href = '/products';
+      });
+    } else {
+      alert('Pesanan berhasil dibuat!');
+    }
+
+    // TODO: Send to backend
+    // fetch('/order/create', {
+    //   method: 'POST',
+    //   headers: {'Content-Type': 'application/json'},
+    //   body: JSON.stringify(formData)
+    // })
+    // .then(response => response.json())
+    // .then(data => {
+    //   if (data.success) {
+    //     // Show success and redirect
+    //   }
+    // });
+  });
+</script>
+
+{% endblock %}
