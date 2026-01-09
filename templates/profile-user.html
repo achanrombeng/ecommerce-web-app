@@ -1,147 +1,184 @@
 {% extends "base.html" %}
 
-{% block title %}Profile Setting{% endblock %}
+{% block title %}Profile Setting - LinkedCommerce{% endblock %}
 
 {% block content %}
-<!-- Informasi Profil -->
-<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up">
-  <h2 class="text-xl font-bold text-gray-800 mb-6">
-    <i class="fas fa-user-circle mr-2"></i>Informasi Profil
-  </h2>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-      <!-- {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="mb-4 p-4 rounded-md {% if category == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
-                    {{ message }}
+<div class="bg-white rounded-lg shadow border border-gray-200 overflow-hidden" data-aos="fade-up">
+    <div class="border-b border-gray-200 p-6">
+        <h3 class="text-xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-user-cog mr-3 text-linkedin-blue"></i>
+            Informasi Profil
+        </h3>
+        <p class="text-sm text-gray-500 mt-1">Kelola informasi pribadi Anda untuk mengoptimalkan pengalaman berbelanja.</p>
+    </div>
+
+    <div class="p-6">
+        <div class="flex flex-col md:flex-row gap-10">
+            <div class="md:w-1/3 flex flex-col items-center" data-aos="zoom-in">
+                <div class="relative group">
+                    <div class="w-40 h-40 rounded-full border-4 border-linkedin-background overflow-hidden shadow-md group-hover:border-blue-100 transition-all">
+                        <img
+                            id="previewProfile"
+                            src="{{ current_user.profile_image if current_user.profile_image else 'https://via.placeholder.com/150' }}"
+                            alt="Profile"
+                            class="w-full h-full object-cover"
+                        />
+                    </div>
+                    <label for="uploadPhoto" class="absolute bottom-2 right-2 bg-linkedin-blue text-white rounded-full w-10 h-10 flex items-center justify-center cursor-pointer shadow-lg hover:bg-linkedin-dark transition-colors">
+                        <i class="fas fa-camera"></i>
+                        <input type="file" id="uploadPhoto" class="hidden" accept="image/*">
+                    </label>
                 </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %} -->
-  
-  <div class="flex flex-col md:flex-row gap-6">
-    <!-- Foto Profil -->
-    <div class="md:w-1/3 flex flex-col items-center" data-aos="zoom-in">
-      <div class="relative mb-4">
-        <img
-          src="https://via.placeholder.com/150"
-          alt="Profile"
-          class="w-32 h-32 rounded-full object-cover border-4 border-linkedin-blue"
-        />
-        <button class="absolute bottom-0 right-0 bg-linkedin-blue text-white rounded-full w-8 h-8 flex items-center justify-center">
-          <i class="fas fa-camera text-sm"></i>
-        </button>
-      </div>
-      <button class="text-linkedin-blue text-sm font-medium">
-        <i class="fas fa-sync-alt mr-1"></i>Ubah Foto
-      </button>
+                <button class="mt-4 text-linkedin-blue text-xs font-bold hover:underline">
+                    <i class="fas fa-sync-alt mr-1"></i> Perbarui Foto
+                </button>
+            </div>
+
+            <div class="md:w-2/3" data-aos="fade-left">
+                <form id="profileForm" method="POST" action="{{ url_for('edit_profile_user', user_id=current_user.id) }}" class="space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nama Depan</label>
+                            <input type="text" name="first_name" value="{{ current_user.first_name }}" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none transition-all text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nama Belakang</label>
+                            <input type="text" name="last_name" value="{{ current_user.last_name }}" required
+                                class="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none transition-all text-sm" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Alamat Email</label>
+                        <input type="email" value="{{ current_user.email }}" readonly
+                            class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-gray-500 text-sm cursor-not-allowed" />
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">No. Telepon</label>
+                            <input type="tel" name="phone_number" value="{{ current_user.phone_number }}"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none transition-all text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tanggal Lahir</label>
+                            <input type="date" name="birth_date" value="{{ current_user.birth_date.strftime('%Y-%m-%d') if current_user.birth_date else '' }}"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none transition-all text-sm" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Jenis Kelamin</label>
+                        <select name="gender" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none bg-white transition-all text-sm appearance-none">
+                            <option value="MALE" {% if current_user.gender|string == 'MALE' %}selected{% endif %}>Laki-laki</option>
+                            <option value="FEMALE" {% if current_user.gender|string == 'FEMALE' %}selected{% endif %}>Perempuan</option>
+                            <option value="OTHER" {% if current_user.gender|string == 'OTHER' %}selected{% endif %}>Lainnya</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Alamat Lengkap</label>
+                        <textarea rows="3" name="address"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none transition-all text-sm">{{ current_user.address }}</textarea>
+                    </div>
+
+                    <div class="pt-4 flex justify-end">
+                        <button type="submit" id="submitBtn"
+                            class="bg-linkedin-blue text-white px-10 py-2.5 rounded-full font-bold text-sm hover:bg-linkedin-dark transition-all shadow-md flex items-center">
+                            <i class="fas fa-save mr-2"></i> Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-    
-    <!-- Form Profil -->
-    <div class="md:w-2/3" data-aos="fade-left">
-      <form method="POST" action="{{ url_for('edit_profile_user', user_id=current_user.id) }}">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-            <input
-              type="text"
-              name="first_name"
-              value="{{ current_user.first_name }}"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-            <input
-              type="text"
-              name="last_name"
-              value="{{ current_user.last_name }}"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-            />
-          </div>
-        </div>
-        
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input
-            type="email"
-            name="email"
-            value="{{ current_user.email }}"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-          />
-        </div>
-        
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-          <input
-            type="tel"
-            name="phone_number"
-            value="{{ current_user.phone_number }}"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-          />
-        </div>
-
-        <!-- Tanggal Lahir -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir</label>
-          <input
-            type="date"
-            name="birth_date"
-            value="{{ current_user.birth_date.strftime('%Y-%m-%d') if current_user.birth_date else '' }}"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-          />
-        </div>
-
-        <!-- Gender -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-          <select
-            name="gender"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-            value="{{ current_user.gender }}"
-          >
-            <option value="male" {% if current_user.gender == 'male' %}selected{% endif %}>Male</option>
-            <option value="female" {% if current_user.gender == 'female' %}selected{% endif %}>Female</option>
-            <option value="other" {% if current_user.gender == 'other' %}selected{% endif %}>Other</option>
-          </select>
-        </div>
-
-        <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
-          <textarea
-            rows="3"
-            name="address"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-          >{{ current_user.address }}</textarea>
-        </div>
-        
-        <div class="flex justify-end">
-          <button
-            type="submit"
-            class="bg-linkedin-blue text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors"
-          >
-            <i class="fas fa-save mr-1"></i>Save Changes
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
 </div>
 
+<script>
+    const profileForm = document.getElementById('profileForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    profileForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // Stop form dari submit otomatis
+
+        Swal.fire({
+            title: 'Simpan Perubahan?',
+            text: "Pastikan data yang Anda masukkan sudah benar.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#0a66c2',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, Simpan!',
+            cancelButtonText: 'Batal',
+            heightAuto: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Tampilkan loading
+                Swal.fire({
+                    title: 'Memproses...',
+                    html: 'Sedang memperbarui profil Anda',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Kirim form secara manual
+                const formData = new FormData(profileForm);
+                
+                fetch(profileForm.action, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: 'Profil Anda telah diperbarui.',
+                            confirmButtonColor: '#0a66c2',
+                            timer: 2000,
+                            timerProgressBar: true
+                        }).then(() => {
+                            window.location.reload(); // Refresh halaman untuk melihat perubahan
+                        });
+                    } else {
+                        throw new Error('Terjadi kesalahan saat menyimpan.');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: error.message,
+                        confirmButtonColor: '#0a66c2'
+                    });
+                });
+            }
+        });
+    });
+
+    // Preview Gambar
+    document.getElementById('uploadPhoto')?.addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('previewProfile').setAttribute('src', event.target.result);
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+</script>
 
 <style>
-  /* Toggle switch styling */
-  input[type="checkbox"]:checked + label {
-    background-color: #0a66c2;
-  }
-  
-  input[type="checkbox"]:checked + label .dot {
-    transform: translateX(1.5rem);
-  }
-  
-  /* Smooth transitions */
-  .transition {
-    transition: all 0.3s ease;
-  }
+    select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 1rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+    }
 </style>
 {% endblock %}

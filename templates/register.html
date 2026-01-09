@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Daftar - LinkedIn</title>
+    <title>Daftar</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -66,10 +66,10 @@
             <h1 class="text-2xl font-bold text-gray-800 mb-2">
               Buat Akun Baru
             </h1>
-            <p class="text-gray-600">Bergabung dengan LinkedIn hari ini</p>
+            <!-- <p class="text-gray-600">Bergabung dengan LinkedIn hari ini</p> -->
 
             <!-- Informasi tambahan untuk layout landscape -->
-            <div class="mt-6 hidden md:block">
+            <!-- <div class="mt-6 hidden md:block">
               <div class="flex items-center mb-3">
                 <i class="fas fa-users text-[#0a66c2] mr-2"></i>
                 <span class="text-sm text-gray-600"
@@ -86,20 +86,20 @@
                   >Tingkatkan keterampilan Anda</span
                 >
               </div>
-            </div>
+            </div> -->
           </div>
 
           <!-- Form container -->
           <div class="p-6 md:w-3/5">
             <!-- Flash Messages -->
-            {% with messages = get_flashed_messages(with_categories=true) %} {%
+            <!-- {% with messages = get_flashed_messages(with_categories=true) %} {%
             if messages %} {% for category, message in messages %}
             <div
               class="mb-4 p-3 rounded {% if category == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}"
             >
               {{ message }}
             </div>
-            {% endfor %} {% endif %} {% endwith %}
+            {% endfor %} {% endif %} {% endwith %} -->
 
             <div class="scrollable-form max-h-[70vh] overflow-y-auto pr-2">
               <form
@@ -291,7 +291,7 @@
         data-aos="fade-up"
         data-aos-delay="400"
       >
-        <p class="text-sm">© 2024 LinkedIn. Semua hak dilindungi.</p>
+        <p class="text-sm">© 2024. Semua hak dilindungi.</p>
       </div>
     </div>
 

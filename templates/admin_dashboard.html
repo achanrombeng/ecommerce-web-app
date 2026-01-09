@@ -23,7 +23,7 @@
       <i class="fas fa-exclamation-circle text-yellow-500 mt-1 mr-3"></i>
       <div>
         <h5 class="font-semibold text-gray-800">Selamat Datang, Administrator!</h5>
-        <p class="text-sm text-gray-600 mt-1">Anda memiliki akses penuh untuk mengelola sistem dengan perlindungan token JWT.</p>
+        <!-- <p class="text-sm text-gray-600 mt-1">Anda memiliki akses penuh untuk mengelola sistem dengan perlindungan token JWT.</p> -->
       </div>
     </div>
   </div>
@@ -33,8 +33,8 @@
     <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-linkedin-blue">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm font-medium text-gray-600">Total Pengguna</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="totalUsers">0</h3>
+          <p class="text-sm font-medium text-gray-600">Total User</p>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="totalUsers">{{ total_users }}</h3>
         </div>
         <div class="bg-linkedin-background p-3 rounded-full">
           <i class="fas fa-users text-linkedin-blue text-xl"></i>
@@ -45,8 +45,8 @@
     <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm font-medium text-gray-600">Pengguna Aktif</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="activeUsers">0</h3>
+          <p class="text-sm font-medium text-gray-600">Total Product</p>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="activeUsers">{{ total_products }}</h3>
         </div>
         <div class="bg-green-50 p-3 rounded-full">
           <i class="fas fa-user-check text-green-500 text-xl"></i>
@@ -57,8 +57,8 @@
     <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
       <div class="flex items-center justify-between">
         <div>
-          <p class="text-sm font-medium text-gray-600">Administrator</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="adminUsers">0</h3>
+          <p class="text-sm font-medium text-gray-600">Total Pesanan</p>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="adminUsers">{{ orders|length }}</h3>
         </div>
         <div class="bg-purple-50 p-3 rounded-full">
           <i class="fas fa-shield-alt text-purple-500 text-xl"></i>
@@ -68,7 +68,7 @@
   </div>
 
   <!-- User Management Table -->
-  <div class="bg-white rounded-lg shadow" data-aos="fade-up" data-aos-delay="200">
+  <!-- <div class="bg-white rounded-lg shadow" data-aos="fade-up" data-aos-delay="200">
     <div class="px-6 py-4 border-b border-gray-200">
       <h3 class="text-lg font-semibold text-gray-800">Manajemen Pengguna</h3>
     </div>
@@ -93,7 +93,7 @@
         </tbody>
       </table>
     </div>
-  </div>
+  </div> -->
 </div>
 
 <script>

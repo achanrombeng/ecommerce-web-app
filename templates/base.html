@@ -55,7 +55,7 @@
       {% endfor %}
     </div>
     {% endif %} {% endwith %}
-    <nav class="bg-white shadow-md" data-aos="fade-down">
+    <nav class="bg-white shadow-md  z-50 top-0 left-0 right-0" data-aos="fade-down">
       <div
         class="container flex justify-between items-centers py-3 px-6 mx-auto"
       >
@@ -63,11 +63,7 @@
           <h1 class="text-linkedin-blue text-2xl font-bold mr-10">
             <i class="fas fa-shopping-bag mr-2"></i>LinkedCommerce
           </h1>
-          <div class="hidden md:flex space-x-6">
-            <a href="#" class="text-linkedin-blue font-semibold"
-              ><i class="fas fa-home mr-1"></i> Beranda</a
-            >
-          </div>
+          
         </div>
         <div class="flex items-center space-x-4">
           <div class="relative">
@@ -79,19 +75,18 @@
             <i class="fas fa-search absolute left-3 top-3 text-gray-500"></i>
           </div>
           <div class="flex space-x-4">
-            <a href="#" class="text-gray-700 hover:text-linkedin-blue relative">
+            <a href="{{ url_for('cart_user') }}" class="text-gray-700 hover:text-linkedin-blue relative">
               <i class="fas fa-shopping-cart text-xl"></i>
               <span
                 class="absolute -top-2 -right-2 bg-linkedin-blue text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
                 >3</span
               >
             </a>
-            <a href="#" class="text-gray-700 hover:text-linkedin-blue"
-              ><i class="fas fa-bell text-xl"></i
-            ></a>
+            
             <div class="relative">
               <a
                 href="{{ url_for('logout') }}"
+                id="logout-btn"
                 class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition duration-200"
               >
                 <i class="fas fa-sign-out-alt mr-2"></i>Logout
@@ -161,7 +156,7 @@
               <span>Orders</span>
             </a>
             <a
-              href="#"
+              href="{{ url_for('cart_user') }}"
               class="flex items-center text-gray-700 hover:text-linkedin-blue py-2"
             >
               <i class="fas fa-cart-shopping mr-3 w-5 text-center"></i>
@@ -357,6 +352,7 @@
       </div>
     </footer>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
       // Inisialisasi AOS
       AOS.init({
@@ -365,7 +361,35 @@
         once: true,
         offset: 100,
       });
+      // Swal Alert untuk Logout
+document.getElementById('logout-btn').addEventListener('click', function(e) {
+  e.preventDefault(); // Mencegah link langsung berpindah halaman
+  const logoutUrl = this.getAttribute('href');
 
+  Swal.fire({
+    title: 'Konfirmasi Keluar',
+    text: "Apakah Anda yakin ingin mengakhiri sesi admin ini?",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#0a66c2', // Warna LinkedIn Blue
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Ya, Keluar!',
+    cancelButtonText: 'Batal',
+    reverseButtons: true
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Tampilkan loading sebentar sebelum pindah
+      Swal.fire({
+        title: 'Sedang Keluar...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      window.location.href = logoutUrl;
+    }
+  });
+});
       // Animasi progress bar
       document.addEventListener("DOMContentLoaded", function () {
         const progressBars = document.querySelectorAll(".progress-bar");

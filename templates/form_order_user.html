@@ -1,333 +1,253 @@
-{% extends "base.html" %}
-{% block title %}Form Order{% endblock %}
+{% extends "base.html" %} 
+{% block title %}Form Order - LinkedCommerce{% endblock %} 
 {% block content %}
 
-<!-- Page Content -->
-<main class="bg-white rounded-lg shadow p-4 md:p-6" data-aos="fade-up">
-  <div id="orderContent" class="page-content">
-    <!-- Header -->
-    <div class="mb-6">
-      <h3 class="text-xl font-bold text-gray-800 mb-2">Form Pemesanan</h3>
-      <p class="text-sm text-gray-500">Lengkapi data di bawah untuk melakukan pemesanan</p>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<main class="max-w-4xl mx-auto pb-12" data-aos="fade-up">
+  <div id="orderContent" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="bg-[#0a66c2] p-6 md:p-8 text-white">
+      <div class="flex items-center space-x-3">
+        <i class="fas fa-file-invoice-dollar text-2xl"></i>
+        <h3 class="text-2xl font-bold">Konfirmasi Pemesanan</h3>
+      </div>
+      <p class="text-blue-50 opacity-90 mt-1 ml-9">Selesaikan rincian pembayaran untuk memproses pesanan Anda.</p>
     </div>
 
-    <form id="orderForm" class="space-y-6">
-      <!-- Informasi Pemesan -->
-      <div class="bg-gray-50 rounded-lg p-4 md:p-6">
-        <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-          <i class="fas fa-user-circle mr-2 text-emerald-500"></i>
-          Informasi Pemesan
-        </h4>
+    <form id="orderForm" method="POST" class="p-6 md:p-8 space-y-8">
+      <section>
+        <div class="flex items-center space-x-2 mb-4 border-b pb-2">
+          <i class="fas fa-map-marker-alt text-[#0a66c2] text-lg"></i>
+          <h4 class="text-lg font-bold text-gray-800">Alamat Pengiriman</h4>
+        </div>
         
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="space-y-1">
+            <label class="text-sm font-semibold text-gray-600">Nama Lengkap</label>
+            <input type="text" id="fullName" name="fullName" value="{{ user_data.first_name }} {{ user_data.last_name }}" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-[#0a66c2] outline-none transition-all">
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-sm font-semibold text-gray-600">Email LinkedIn</label>
+            <input type="email" id="email" name="email" value="{{ user_data.email }}" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-[#0a66c2] outline-none transition-all">
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-sm font-semibold text-gray-600">No. Telepon Aktif</label>
+            <input type="tel" id="phone" name="phone" value="{{ user_data.phone_number }}" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-[#0a66c2] outline-none transition-all">
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-sm font-semibold text-gray-600">Kota / Alamat Tujuan</label>
+            <input type="text" id="city" name="city" value="{{ user_data.address }}" required
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-[#0a66c2] outline-none transition-all">
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-[#f3f6f8] rounded-xl p-5 border border-gray-200">
+        <div class="flex items-center space-x-2 mb-4 border-b border-gray-300 pb-2">
+          <i class="fas fa-briefcase text-[#0a66c2] text-lg"></i>
+          <h4 class="text-lg font-bold text-gray-800">Rincian Produk</h4>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-6">
+          <div class="flex-1 space-y-4">
+            <div>
+              <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Item</p>
+              <p class="text-lg font-semibold text-gray-900">{{ product_now.product_name }}</p>
+              <input type="hidden" id="product" value="{{ product_now.product_name }}">
+              <input type="hidden" id="category" value="{{ product_now.product_category }}">
+            </div>
+            
+            <div class="flex items-center gap-6">
+               <div class="w-24">
+                  <label class="text-xs font-bold text-gray-500 uppercase">Kuantitas</label>
+                  <input type="number" id="quantity" name="quantity" min="1" value="1" required
+                    class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] outline-none font-bold text-center">
+               </div>
+               <div class="flex-1">
+                  <p class="text-xs font-bold text-gray-500 uppercase">Harga Satuan</p>
+                  <p class="text-[#0a66c2] font-bold text-lg mt-1">Rp <span id="unitPriceValue">{{ product_now.product_price }}</span></p>
+               </div>
+            </div>
+          </div>
+
+          <div class="md:w-1/3 bg-white p-4 rounded-lg border border-gray-300 flex flex-col justify-center text-center">
+             <p class="text-sm text-gray-500">Estimasi Subtotal</p>
+             <input type="text" id="subTotal" readonly class="text-xl font-bold text-[#0a66c2] bg-transparent border-none outline-none text-center cursor-default">
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Metode Pembayaran</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Nama Lengkap -->
-          <div>
-            <label for="fullName" class="block text-sm font-medium text-gray-700 mb-2">
-              Nama Lengkap <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="fullName"
-              name="fullName"
-              required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              placeholder="Masukkan nama lengkap"
-            />
-          </div>
-
-          <!-- Email -->
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-              Email <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              placeholder="contoh@email.com"
-            />
-          </div>
-
-          <!-- No. Telepon -->
-          <div>
-            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
-              No. Telepon <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              placeholder="08xxxxxxxxxx"
-            />
-          </div>
-
-          <!-- Kota -->
-          <div>
-            <label for="city" class="block text-sm font-medium text-gray-700 mb-2">
-              Kota <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="city"
-              name="city"
-              required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              placeholder="Masukkan kota"
-            />
-          </div>
-        </div>
-
-        <!-- Alamat Lengkap -->
-        <div class="mt-4">
-          <label for="address" class="block text-sm font-medium text-gray-700 mb-2">
-            Alamat Lengkap <span class="text-red-500">*</span>
-          </label>
-          <textarea
-            id="address"
-            name="address"
-            required
-            rows="3"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            placeholder="Masukkan alamat lengkap untuk pengiriman"
-          ></textarea>
-        </div>
-      </div>
-
-      <!-- Detail Produk -->
-      <div class="bg-gray-50 rounded-lg p-4 md:p-6">
-        <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-          <i class="fas fa-shopping-bag mr-2 text-emerald-500"></i>
-          Detail Produk
-        </h4>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Pilih Produk -->
-          <div>
-            <label for="product" class="block text-sm font-medium text-gray-700 mb-2">
-              Pilih Produk <span class="text-red-500">*</span>
-            </label>
-            <select
-              id="product"
-              name="product"
-              required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            >
-              <option value="">-- Pilih Produk --</option>
-              <option value="1" data-price="5000000">iPhone 14 Pro - Rp 5.000.000</option>
-              <option value="2" data-price="15000000">MacBook Pro M2 - Rp 15.000.000</option>
-              <option value="3" data-price="8000000">iPad Air - Rp 8.000.000</option>
-              <option value="4" data-price="300000">AirPods Pro - Rp 300.000</option>
-            </select>
-          </div>
-
-          <!-- Jumlah -->
-          <div>
-            <label for="quantity" class="block text-sm font-medium text-gray-700 mb-2">
-              Jumlah <span class="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              id="quantity"
-              name="quantity"
-              min="1"
-              value="1"
-              required
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        <!-- Catatan Tambahan -->
-        <div class="mt-4">
-          <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
-            Catatan Tambahan (Opsional)
-          </label>
-          <textarea
-            id="notes"
-            name="notes"
-            rows="2"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            placeholder="Tambahkan catatan untuk pesanan Anda"
-          ></textarea>
-        </div>
-      </div>
-
-      <!-- Metode Pembayaran -->
-      <div class="bg-gray-50 rounded-lg p-4 md:p-6">
-        <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-          <i class="fas fa-credit-card mr-2 text-emerald-500"></i>
-          Metode Pembayaran
-        </h4>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <label class="payment-option cursor-pointer">
-            <input type="radio" name="payment" value="transfer" required class="hidden peer" />
-            <div class="border-2 border-gray-300 rounded-lg p-4 text-center hover:border-emerald-500 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-all">
-              <i class="fas fa-university text-2xl text-emerald-500 mb-2"></i>
-              <p class="font-medium text-gray-700">Transfer Bank</p>
+          <label class="relative flex items-center p-4 border-2 rounded-xl cursor-pointer hover:bg-blue-50 transition-all peer-checked:border-[#0a66c2]">
+            <input type="radio" name="payment" value="TRANSFER_BANK" required class="w-5 h-5 accent-[#0a66c2]">
+            <div class="ml-4">
+              <span class="block font-bold text-gray-800">Transfer Bank</span>
+              <span class="text-xs text-gray-500">Verifikasi otomatis via sistem</span>
             </div>
           </label>
 
-          <label class="payment-option cursor-pointer">
-            <input type="radio" name="payment" value="cod" required class="hidden peer" />
-            <div class="border-2 border-gray-300 rounded-lg p-4 text-center hover:border-emerald-500 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-all">
-              <i class="fas fa-hand-holding-usd text-2xl text-emerald-500 mb-2"></i>
-              <p class="font-medium text-gray-700">COD</p>
-            </div>
-          </label>
-
-          <label class="payment-option cursor-pointer">
-            <input type="radio" name="payment" value="ewallet" required class="hidden peer" />
-            <div class="border-2 border-gray-300 rounded-lg p-4 text-center hover:border-emerald-500 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition-all">
-              <i class="fas fa-wallet text-2xl text-emerald-500 mb-2"></i>
-              <p class="font-medium text-gray-700">E-Wallet</p>
+          <label class="relative flex items-center p-4 border-2 rounded-xl cursor-pointer hover:bg-blue-50 transition-all">
+            <input type="radio" name="payment" value="COD" required class="w-5 h-5 accent-[#0a66c2]">
+            <div class="ml-4">
+              <span class="block font-bold text-gray-800">Bayar di Tempat (COD)</span>
+              <span class="text-xs text-gray-500">Bayar saat kurir sampai</span>
             </div>
           </label>
         </div>
-      </div>
+      </section>
 
-      <!-- Ringkasan Order -->
-      <div class="bg-emerald-50 rounded-lg p-4 md:p-6 border border-emerald-200">
-        <h4 class="text-lg font-semibold text-gray-800 mb-4">Ringkasan Pesanan</h4>
-        
-        <div class="space-y-2">
-          <div class="flex justify-between text-gray-700">
-            <span>Subtotal:</span>
-            <span id="subtotal" class="font-medium">Rp 0</span>
+      <div class="pt-8 border-t border-gray-200">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+          <div>
+            <p class="text-gray-500 text-sm">Total yang harus dibayar:</p>
+            <p id="summaryTotal" class="text-3xl font-bold text-gray-900">Rp 0</p>
           </div>
-          <div class="flex justify-between text-gray-700">
-            <span>Ongkos Kirim:</span>
-            <span id="shipping" class="font-medium">Rp 0</span>
-          </div>
-          <div class="border-t border-emerald-300 pt-2 mt-2">
-            <div class="flex justify-between text-lg font-bold text-gray-800">
-              <span>Total:</span>
-              <span id="total" class="text-emerald-600">Rp 0</span>
-            </div>
+          <div class="flex items-center space-x-2 text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
+             <i class="fas fa-lock text-sm"></i>
+             <span class="text-xs font-bold uppercase tracking-widest">Enkripsi Aman</span>
           </div>
         </div>
-      </div>
 
-      <!-- Buttons -->
-      <div class="flex flex-col sm:flex-row gap-3">
-        <button
-          type="button"
-          onclick="window.history.back()"
-          class="flex-1 bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-        >
-          <i class="fas fa-arrow-left mr-2"></i>
-          Kembali
-        </button>
-        <button
-          type="submit"
-          class="flex-1 bg-emerald-500 text-white px-6 py-3 rounded-lg hover:bg-emerald-600 transition-colors font-medium"
-        >
-          <i class="fas fa-check-circle mr-2"></i>
-          Proses Pesanan
-        </button>
+        <div class="flex flex-col md:flex-row gap-4">
+          <button type="button" onclick="window.history.back()"
+            class="flex-1 px-6 py-3 rounded-full border border-[#0a66c2] text-[#0a66c2] font-bold hover:bg-blue-50 transition-all order-2 md:order-1">
+            Kembali
+          </button>
+          <button type="submit" class="submit-btn flex-1 px-6 py-3 rounded-full bg-[#0a66c2] text-white font-bold shadow-md hover:bg-[#004182] transition-all order-1 md:order-2">
+            Konfirmasi Pesanan
+          </button>
+        </div>
       </div>
     </form>
   </div>
 </main>
 
-<!-- JavaScript -->
 <script>
-  // Storage fallback
-  (function() {
-    try {
-      localStorage.setItem('test', 'test');
-      localStorage.removeItem('test');
-    } catch(e) {
-      window.localStorage = {
-        _data: {},
-        setItem: function(id, val) { return this._data[id] = String(val); },
-        getItem: function(id) { return this._data.hasOwnProperty(id) ? this._data[id] : undefined; },
-        removeItem: function(id) { return delete this._data[id]; },
-        clear: function() { return this._data = {}; }
-      };
+class OrderCalculator {
+  constructor() {
+    const unitPriceEl = document.getElementById('unitPriceValue');
+    // Bersihkan karakter non-numeric sebelum parse
+    const rawPrice = unitPriceEl ? unitPriceEl.textContent.replace(/[^\d]/g, '') : "0";
+    this.productPrice = parseFloat(rawPrice);
+    this.init();
+  }
+
+  init() {
+    const qtyInput = document.getElementById('quantity');
+    if (qtyInput) {
+      qtyInput.addEventListener('input', () => this.updateTotals());
+      qtyInput.addEventListener('change', () => this.validateQty());
     }
-  })();
-
-  // Calculate order summary
-  const productSelect = document.getElementById('product');
-  const quantityInput = document.getElementById('quantity');
-  const subtotalEl = document.getElementById('subtotal');
-  const shippingEl = document.getElementById('shipping');
-  const totalEl = document.getElementById('total');
-
-  function calculateTotal() {
-    const selectedOption = productSelect.options[productSelect.selectedIndex];
-    const price = parseFloat(selectedOption.dataset.price || 0);
-    const quantity = parseInt(quantityInput.value || 0);
-    const shipping = 25000; // Fixed shipping cost
-
-    const subtotal = price * quantity;
-    const total = subtotal + (subtotal > 0 ? shipping : 0);
-
-    subtotalEl.textContent = formatCurrency(subtotal);
-    shippingEl.textContent = subtotal > 0 ? formatCurrency(shipping) : 'Rp 0';
-    totalEl.textContent = formatCurrency(total);
+    this.updateTotals();
   }
 
-  function formatCurrency(amount) {
-    return 'Rp ' + amount.toLocaleString('id-ID');
+  validateQty() {
+    const qtyInput = document.getElementById('quantity');
+    if (qtyInput.value < 1) qtyInput.value = 1;
+    this.updateTotals();
   }
 
-  productSelect.addEventListener('change', calculateTotal);
-  quantityInput.addEventListener('input', calculateTotal);
+  updateTotals() {
+    const qty = parseInt(document.getElementById('quantity').value) || 1;
+    const subtotal = qty * this.productPrice;
+    
+    const formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(subtotal);
+    document.getElementById('subTotal').value = formatted;
+    document.getElementById('summaryTotal').textContent = formatted;
+  }
 
-  // Form submission
-  document.getElementById('orderForm').addEventListener('submit', function(e) {
+  getRawTotal() {
+    const qty = parseInt(document.getElementById('quantity').value) || 1;
+    return qty * this.productPrice;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const calculator = new OrderCalculator();
+  const orderForm = document.getElementById('orderForm');
+
+  orderForm.addEventListener('submit', function(e) {
     e.preventDefault();
 
+    const payment = document.querySelector('input[name="payment"]:checked')?.value;
+    if (!payment) {
+      Swal.fire({ icon: 'info', title: 'Metode Pembayaran', text: 'Silakan pilih metode pembayaran untuk melanjutkan.', confirmButtonColor: '#0a66c2' });
+      return;
+    }
+
+    const btn = document.querySelector('.submit-btn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+
     const formData = {
+      productId: "{{ product_now.id }}",
       fullName: document.getElementById('fullName').value,
       email: document.getElementById('email').value,
       phone: document.getElementById('phone').value,
       city: document.getElementById('city').value,
-      address: document.getElementById('address').value,
-      product: productSelect.options[productSelect.selectedIndex].text,
-      quantity: quantityInput.value,
-      notes: document.getElementById('notes').value,
-      payment: document.querySelector('input[name="payment"]:checked')?.value,
-      total: totalEl.textContent
+      product: document.getElementById('product').value,
+      quantity: document.getElementById('quantity').value,
+      payment: payment,
+      total: calculator.getRawTotal()
     };
 
-    console.log('Order Data:', formData);
-
-    // Show success message
-    if (typeof Swal !== 'undefined') {
-      Swal.fire({
-        icon: 'success',
-        title: 'Pesanan Berhasil!',
-        text: 'Terima kasih telah melakukan pemesanan. Kami akan segera memproses pesanan Anda.',
-        confirmButtonColor: '#10b981',
-        confirmButtonText: 'OK'
-      }).then(() => {
-        // Reset form or redirect
-        // window.location.href = '/products';
-      });
-    } else {
-      alert('Pesanan berhasil dibuat!');
-    }
-
-    // TODO: Send to backend
-    // fetch('/order/create', {
-    //   method: 'POST',
-    //   headers: {'Content-Type': 'application/json'},
-    //   body: JSON.stringify(formData)
-    // })
-    // .then(response => response.json())
-    // .then(data => {
-    //   if (data.success) {
-    //     // Show success and redirect
-    //   }
-    // });
+    fetch('/api/store', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Pesanan Dikonfirmasi',
+          text: 'Pesanan Anda telah berhasil dibuat dan sedang dalam antrean.',
+          confirmButtonText: 'Buka Riwayat Pesanan',
+          confirmButtonColor: '#0a66c2',
+          allowOutsideClick: false
+        }).then(() => {
+          window.location.href = "{{ url_for('order_user') }}";
+        });
+      } else {
+        throw new Error(data.message);
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      Swal.fire({ icon: 'error', title: 'Terjadi Kesalahan', text: err.message, confirmButtonColor: '#0a66c2' });
+    });
   });
+});
 </script>
+
+<style>
+  /* LinkedIn Style Customization */
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  .submit-btn:hover {
+    box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3);
+  }
+
+  /* Focus effect */
+  input:focus {
+    border-color: #0a66c2 !important;
+    box-shadow: 0 0 0 1px #0a66c2 !important;
+  }
+</style>
 
 {% endblock %}

@@ -1,276 +1,150 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard User{% endblock %}
+{% block title %}Dashboard - LinkedCommerce{% endblock %}
 
 {% block content %}
-<!-- Pesanan Terbaru -->
-<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up">
-  <div class="flex justify-between items-center mb-4">
-    <h2 class="text-xl font-bold text-gray-800">
-      <i class="fas fa-shopping-bag mr-2"></i>Pesanan Terbaru
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6 mb-8" data-aos="fade-up">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-bold text-gray-800 flex items-center">
+      <i class="fas fa-chart-line mr-3 text-linkedin-blue"></i>Pesanan Terbaru
     </h2>
-    <a href="{{ url_for('order_user') }}" class="text-linkedin-blue text-sm font-medium"
-      ><i class="fas fa-eye mr-1"></i>Lihat semua</a
-    >
+    <a href="{{ url_for('order_user') }}" class="text-linkedin-blue text-sm font-bold hover:underline">
+        Lihat Riwayat <i class="fas fa-chevron-right ml-1 text-xs"></i>
+    </a>
   </div>
 
-  <div class="border rounded-lg overflow-hidden">
-    <div class="border-b p-4 flex justify-between items-center">
-      <div>
-        <p class="font-medium">
-          <i class="fas fa-receipt mr-2"></i>Order #ORD-7892
-        </p>
-        <p class="text-sm text-gray-500">
-          <i class="far fa-calendar mr-1"></i>Tanggal: 25 Okt 2023
-        </p>
-      </div>
-      <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded"
-        ><i class="fas fa-truck mr-1"></i>Dikirim</span
-      >
-    </div>
-    <div class="p-4 flex items-center">
-      <img
-        src="https://via.placeholder.com/60"
-        alt="Product"
-        class="w-16 h-16 rounded-md mr-4"
-      />
-      <div class="flex-grow">
-        <p class="font-medium">Tas Ransel Modern</p>
-        <p class="text-sm text-gray-500">1 barang • Rp 349.000</p>
-      </div>
-      <button class="text-linkedin-blue text-sm font-medium">
-        <i class="fas fa-shipping-fast mr-1"></i>Lacak Paket
-      </button>
-    </div>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-    <div
-      class="bg-linkedin-background p-4 rounded-lg text-center"
-      data-aos="zoom-in"
-      data-aos-delay="100"
-    >
-      <div
-        class="bg-linkedin-blue rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2"
-      >
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+    <div class="bg-blue-50 border border-blue-100 p-5 rounded-xl text-center transition-transform hover:scale-105" data-aos="zoom-in" data-aos-delay="100">
+      <div class="bg-linkedin-blue rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 shadow-sm">
         <i class="fas fa-clock text-white"></i>
       </div>
-      <p class="text-sm text-gray-600">Menunggu Pembayaran</p>
-      <p class="text-xl font-bold mt-1">1</p>
+      <p class="text-xs font-bold text-linkedin-blue uppercase tracking-widest">Pending</p>
+      <p class="text-3xl font-black mt-1 text-gray-800">{{ pending }}</p>
     </div>
-    <div
-      class="bg-linkedin-background p-4 rounded-lg text-center"
-      data-aos="zoom-in"
-      data-aos-delay="200"
-    >
-      <div
-        class="bg-yellow-500 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2"
-      >
-        <i class="fas fa-cog text-white"></i>
+
+    <div class="bg-orange-50 border border-orange-100 p-5 rounded-xl text-center transition-transform hover:scale-105" data-aos="zoom-in" data-aos-delay="200">
+      <div class="bg-orange-500 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 shadow-sm">
+        <i class="fas fa-sync-alt text-white"></i>
       </div>
-      <p class="text-sm text-gray-600">Diproses</p>
-      <p class="text-xl font-bold mt-1">2</p>
+      <p class="text-xs font-bold text-orange-600 uppercase tracking-widest">Diproses</p>
+      <p class="text-3xl font-black mt-1 text-gray-800">{{ approve }}</p>
     </div>
-    <div
-      class="bg-linkedin-background p-4 rounded-lg text-center"
-      data-aos="zoom-in"
-      data-aos-delay="300"
-    >
-      <div
-        class="bg-green-500 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2"
-      >
-        <i class="fas fa-truck text-white"></i>
+
+    <div class="bg-red-50 border border-red-100 p-5 rounded-xl text-center transition-transform hover:scale-105" data-aos="zoom-in" data-aos-delay="300">
+      <div class="bg-red-500 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3 shadow-sm">
+        <i class="fas fa-times text-white"></i>
       </div>
-      <p class="text-sm text-gray-600">Dikirim</p>
-      <p class="text-xl font-bold mt-1">1</p>
+      <p class="text-xs font-bold text-red-600 uppercase tracking-widest">Dibatalkan</p>
+      <p class="text-3xl font-black mt-1 text-gray-800">{{ cancel }}</p>
     </div>
   </div>
 </div>
 
-<!-- Rekomendasi untuk Anda -->
-<div
-  class="bg-white rounded-lg shadow p-6"
-  data-aos="fade-up"
-  data-aos-delay="100"
->
-  <h2 class="text-xl font-bold text-gray-800 mb-4">
-    <i class="fas fa-thumbs-up mr-2"></i>Rekomendasi untuk Anda
-  </h2>
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-    <div
-      class="product-card bg-white border rounded-lg overflow-hidden transition-all"
-      data-aos="flip-left"
-      data-aos-delay="100"
-    >
-      <img
-        src="https://via.placeholder.com/150"
-        alt="Product"
-        class="w-full h-40 object-cover"
-      />
-      <div class="p-3">
-        <p class="text-sm font-medium mb-1">Smart Watch Series 5</p>
-        <p class="text-linkedin-blue font-bold">Rp 799.000</p>
-        <div class="flex items-center mt-1">
-          <div class="flex text-yellow-400">
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star-half-alt text-xs"></i>
-          </div>
-          <span class="text-xs text-gray-500 ml-1">(42)</span>
-        </div>
-      </div>
-    </div>
-    <div
-      class="product-card bg-white border rounded-lg overflow-hidden transition-all"
-      data-aos="flip-left"
-      data-aos-delay="200"
-    >
-      <img
-        src="https://via.placeholder.com/150"
-        alt="Product"
-        class="w-full h-40 object-cover"
-      />
-      <div class="p-3">
-        <p class="text-sm font-medium mb-1">Headphone Wireless</p>
-        <p class="text-linkedin-blue font-bold">Rp 459.000</p>
-        <div class="flex items-center mt-1">
-          <div class="flex text-yellow-400">
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-            <i class="far fa-star text-xs"></i>
-          </div>
-          <span class="text-xs text-gray-500 ml-1">(28)</span>
-        </div>
-      </div>
-    </div>
-    <div
-      class="product-card bg-white border rounded-lg overflow-hidden transition-all"
-      data-aos="flip-left"
-      data-aos-delay="300"
-    >
-      <img
-        src="https://via.placeholder.com/150"
-        alt="Product"
-        class="w-full h-40 object-cover"
-      />
-      <div class="p-3">
-        <p class="text-sm font-medium mb-1">Kamera Portable</p>
-        <p class="text-linkedin-blue font-bold">Rp 1.299.000</p>
-        <div class="flex items-center mt-1">
-          <div class="flex text-yellow-400">
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-          </div>
-          <span class="text-xs text-gray-500 ml-1">(56)</span>
-        </div>
-      </div>
-    </div>
-    <div
-      class="product-card bg-white border rounded-lg overflow-hidden transition-all"
-      data-aos="flip-left"
-      data-aos-delay="400"
-    >
-      <img
-        src="https://via.placeholder.com/150"
-        alt="Product"
-        class="w-full h-40 object-cover"
-      />
-      <div class="p-3">
-        <p class="text-sm font-medium mb-1">Sepatu Running</p>
-        <p class="text-linkedin-blue font-bold">Rp 599.000</p>
-        <div class="flex items-center mt-1">
-          <div class="flex text-yellow-400">
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star text-xs"></i>
-            <i class="fas fa-star-half-alt text-xs"></i>
-          </div>
-          <span class="text-xs text-gray-500 ml-1">(37)</span>
-        </div>
-      </div>
-    </div>
-  </div>
-  <a href="{{ url_for('produk_user') }}" class="block text-center text-linkedin-blue font-medium mt-6"
-    ><i class="fas fa-arrow-right mr-1"></i>Lihat lebih banyak</a
-  >
-</div>
-
-<!-- Wishlist -->
-<div
-  class="bg-white rounded-lg shadow p-6"
-  data-aos="fade-up"
-  data-aos-delay="200"
->
-  <div class="flex justify-between items-center mb-4">
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6 mb-8" data-aos="fade-up" data-aos-delay="100">
+  <div class="flex justify-between items-center mb-6">
     <h2 class="text-xl font-bold text-gray-800">
-      <i class="fas fa-heart mr-2"></i>Wishlist Saya
+      <i class="fas fa-bolt mr-2 text-yellow-500"></i>Produk Terbaru
     </h2>
-    <a href="#" class="text-linkedin-blue text-sm font-medium"
-      ><i class="fas fa-eye mr-1"></i>Lihat semua</a
-    >
+    <a href="{{ url_for('produk_user') }}" class="text-linkedin-blue text-sm font-bold hover:underline">
+        Lihat Semua
+    </a>
   </div>
+
+  <div class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
+    {% if products %} 
+    {% for product in products %}
+    <div class="product-card group bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-all duration-300">
+      <div class="h-40 bg-gray-100 relative flex items-center justify-center overflow-hidden">
+        {% if product.product_image %}
+        <img src="{{ product.product_image }}" alt="{{ product.product_name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        {% else %}
+        <div class="text-gray-300 flex flex-col items-center">
+          <i class="fas fa-image text-3xl"></i>
+        </div>
+        {% endif %}
+
+        {% if loop.index <= 4 %}
+        <span class="absolute top-2 left-2 bg-linkedin-blue text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm uppercase">New</span>
+        {% endif %}
+
+        {% if product.product_stock == 0 %}
+        <div class="absolute inset-0 bg-white/60 flex items-center justify-center">
+            <span class="bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg uppercase">Habis</span>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="p-4">
+        <p class="text-[10px] text-linkedin-blue font-bold uppercase tracking-wider mb-1">
+            {{ product.product_category if product.product_category else 'UMUM' }}
+        </p>
+        <h4 class="font-bold text-gray-800 mb-3 line-clamp-2 h-10 leading-snug">
+          {{ product.product_name }}
+        </h4>
+        
+        <div class="flex flex-col gap-3">
+          <span class="text-lg font-bold text-gray-900">
+            Rp {{ "{:,.0f}".format(product.product_price | float).replace(',', '.') }}
+          </span>
+
+          <div class="flex flex-col gap-2">
+            {% if product.product_stock > 0 %}
+            <a href="{{ url_for('form_order_user', product_id=product.id) }}" 
+               class="w-full bg-linkedin-blue text-white py-2 rounded-full text-[11px] font-bold hover:bg-linkedin-dark transition-all text-center shadow-sm">
+              Pesan Sekarang
+            </a>
+            <button onclick="addToCart({{ product.id }})" 
+               class="w-full border border-linkedin-blue text-linkedin-blue py-2 rounded-full text-[11px] font-bold hover:bg-blue-50 transition-all flex items-center justify-center gap-2">
+               <i class="fas fa-shopping-cart text-[10px]"></i> Keranjang
+            </button>
+            {% else %}
+            <button disabled class="w-full bg-gray-200 text-gray-400 py-2 rounded-full text-[11px] font-bold cursor-not-allowed uppercase">
+              Stok Kosong
+            </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-span-full text-center py-12">
+        <i class="fas fa-box-open text-5xl text-gray-200 mb-3"></i>
+        <p class="text-gray-500">Belum ada produk untuk ditampilkan.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="bg-white rounded-lg shadow border border-gray-200 p-6" data-aos="fade-up" data-aos-delay="200">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-bold text-gray-800">
+      <i class="fas fa-heart mr-2 text-red-500"></i>Wishlist Saya
+    </h2>
+  </div>
+  
   <div class="overflow-x-auto">
     <table class="w-full">
       <thead>
-        <tr class="text-left text-gray-600 border-b">
-          <th class="pb-2">Produk</th>
-          <th class="pb-2">Harga</th>
-          <th class="pb-2">Status</th>
-          <th class="pb-2"></th>
+        <tr class="text-left text-xs font-bold text-gray-400 border-b uppercase tracking-widest">
+          <th class="pb-3 px-2">Produk</th>
+          <th class="pb-3 px-2">Harga</th>
+          <th class="pb-3 px-2">Status</th>
+          <th class="pb-3 px-2 text-right">Aksi</th>
         </tr>
       </thead>
-      <tbody>
-        <tr class="border-b hover:bg-gray-50" data-aos="fade-right">
-          <td class="py-3 flex items-center">
-            <img
-              src="https://via.placeholder.com/40"
-              alt="Product"
-              class="w-10 h-10 rounded-md mr-3"
-            />
-            <span>Jam Tangan Smart</span>
+      <tbody class="divide-y divide-gray-100">
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="py-4 px-2 flex items-center">
+            <img src="https://via.placeholder.com/48" alt="Product" class="w-12 h-12 rounded-lg object-cover mr-4 shadow-sm" />
+            <span class="font-bold text-sm text-gray-700">Jam Tangan Smart</span>
           </td>
-          <td class="py-3">Rp 899.000</td>
-          <td class="py-3">
-            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded"
-              ><i class="fas fa-check-circle mr-1"></i>Tersedia</span
-            >
+          <td class="py-4 px-2 text-sm font-semibold text-gray-900">Rp 899.000</td>
+          <td class="py-4 px-2">
+            <span class="bg-green-50 text-green-700 text-[10px] font-bold px-3 py-1 rounded-full border border-green-100 uppercase">Tersedia</span>
           </td>
-          <td class="py-3">
-            <button class="text-red-500 hover:text-red-700">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </td>
-        </tr>
-        <tr
-          class="border-b hover:bg-gray-50"
-          data-aos="fade-right"
-          data-aos-delay="100"
-        >
-          <td class="py-3 flex items-center">
-            <img
-              src="https://via.placeholder.com/40"
-              alt="Product"
-              class="w-10 h-10 rounded-md mr-3"
-            />
-            <span>Koper Traveling</span>
-          </td>
-          <td class="py-3">Rp 1.199.000</td>
-          <td class="py-3">
-            <span
-              class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded"
-              ><i class="fas fa-clock mr-1"></i>Pre-order</span
-            >
-          </td>
-          <td class="py-3">
-            <button class="text-red-500 hover:text-red-700">
+          <td class="py-4 px-2 text-right">
+            <button class="text-gray-300 hover:text-red-500 transition-colors">
               <i class="fas fa-trash-alt"></i>
             </button>
           </td>
@@ -279,4 +153,17 @@
     </table>
   </div>
 </div>
+
+<script>
+    function addToCart(id) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Ditambahkan!',
+            text: 'Produk masuk ke keranjang belanja.',
+            timer: 1500,
+            showConfirmButton: false,
+            iconColor: '#0a66c2'
+        });
+    }
+</script>
 {% endblock %}

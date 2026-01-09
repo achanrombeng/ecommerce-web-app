@@ -118,7 +118,7 @@
               >
                 <i class="fas fa-cube w-5 text-center mr-3 text-linkedin-blue"></i>
                 <span class="sidebar-text">Produk</span>
-                <span class="ml-auto bg-linkedin-blue text-white text-xs px-2 py-1 rounded-full sidebar-text">{{ total_products }}</span>
+                <span class="ml-auto bg-linkedin-blue text-white text-xs px-2 py-1 rounded-full sidebar-text">{{ products|length }}</span>
               </a>
             </li>
             <li>
@@ -128,7 +128,7 @@
               >
                 <i class="fas fa-shopping-bag w-5 text-center mr-3 text-linkedin-blue"></i>
                 <span class="sidebar-text">Pesanan</span>
-                <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full sidebar-text">12</span>
+                <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full sidebar-text">{{ orders|length }}</span>
               </a>
             </li>
             <li>
@@ -142,16 +142,16 @@
               </a>
             </li>
             </li>
-            <li>
+            <!-- <li>
               <a
-                href="{{ url_for('admin_report') }}"
+                href=""
                 class="flex items-center px-4 py-3 text-gray-700 hover:bg-linkedin-background hover:text-linkedin-blue rounded-lg transition"
               >
                 <i class="fas fa-chart-bar w-5 text-center mr-3 text-linkedin-blue"></i>
                 <span class="sidebar-text">Laporan</span>
               </a>
-            </li>
-            <li>
+            </li> -->
+            <!-- <li>
               <a
                 href=""
                 class="flex items-center px-4 py-3 text-gray-700 hover:bg-linkedin-background hover:text-linkedin-blue rounded-lg transition"
@@ -159,19 +159,16 @@
                 <i class="fas fa-cog w-5 text-center mr-3 text-linkedin-blue"></i>
                 <span class="sidebar-text">Pengaturan</span>
               </a>
-            </li>
+            </li> -->
           </ul>
         </nav>
 
         <!-- Logout -->
         <div class="p-4 border-t border-gray-200">
-          <a
-            href="{{ url_for('logout') }}"
-            class="flex items-center px-4 py-3 text-gray-700 hover:bg-linkedin-background hover:text-linkedin-blue rounded-lg transition"
-          >
-            <i class="fas fa-sign-out-alt w-5 text-center mr-3 text-linkedin-blue"></i>
-            <span class="sidebar-text">Keluar</span>
-          </a>
+          <a href="{{ url_for('logout') }}" id="logout-btn" class="flex items-center px-4 py-3 text-gray-700 hover:bg-linkedin-background hover:text-linkedin-blue rounded-lg transition">
+  <i class="fas fa-sign-out-alt w-5 text-center mr-3 text-linkedin-blue"></i>
+  <span class="sidebar-text">Keluar</span>
+</a>
         </div>
       </div>
 
@@ -196,25 +193,13 @@
                 />
                 <i class="fas fa-search absolute left-3 top-3 text-gray-500"></i>
               </div>
-              
-              <!-- Notifications -->
-              <div class="relative">
-                <button class="text-gray-600 hover:text-linkedin-blue relative">
-                  <i class="fas fa-bell text-xl"></i>
-                  <span class="absolute -top-1 -right-1 bg-linkedin-blue text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">3</span>
-                </button>
-              </div>
-              
+
               <!-- Quick Stats -->
               <div class="hidden md:flex items-center space-x-4 text-sm">
-                <div class="text-center">
-                  <p class="font-semibold text-linkedin-blue">Rp 12.5JT</p>
-                  <p class="text-xs text-gray-500">Hari Ini</p>
-                </div>
                 <div class="h-6 border-l border-gray-300"></div>
                 <div class="text-center">
-                  <p class="font-semibold text-linkedin-blue">24</p>
-                  <p class="text-xs text-gray-500">Pesanan Baru</p>
+                  <p class="font-semibold text-linkedin-blue">{{ orders|length }}</p>
+                  <p class="text-xs text-gray-500">Total Pesanan</p>
                 </div>
               </div>
             </div>
@@ -263,6 +248,7 @@
     </div>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
       // Inisialisasi AOS
       AOS.init({
@@ -271,7 +257,35 @@
         once: true,
         offset: 100,
       });
+      // Swal Alert untuk Logout
+document.getElementById('logout-btn').addEventListener('click', function(e) {
+  e.preventDefault(); // Mencegah link langsung berpindah halaman
+  const logoutUrl = this.getAttribute('href');
 
+  Swal.fire({
+    title: 'Konfirmasi Keluar',
+    text: "Apakah Anda yakin ingin mengakhiri sesi admin ini?",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#0a66c2', // Warna LinkedIn Blue
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Ya, Keluar!',
+    cancelButtonText: 'Batal',
+    reverseButtons: true
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Tampilkan loading sebentar sebelum pindah
+      Swal.fire({
+        title: 'Sedang Keluar...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      window.location.href = logoutUrl;
+    }
+  });
+});
       // Sidebar Toggle
       document.getElementById('sidebar-toggle').addEventListener('click', function() {
         const sidebar = document.getElementById('sidebar');
