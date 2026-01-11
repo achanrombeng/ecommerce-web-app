@@ -40,6 +40,7 @@ class User(Base, UserMixin):
     is_active = Column(Boolean, default=True)
     birth_date = Column(DateTime, nullable=True)  
 
+    cart_items = relationship("Cart", back_populates="user", cascade="all, delete-orphan")
     def set_password(self, password):
         """Set password hash"""
         self.password_hash = generate_password_hash(password)
@@ -72,6 +73,7 @@ class Product(Base):
     
     # Hanya satu relationship yang menggunakan backref
     images = relationship("Image", backref="product", cascade="all, delete-orphan")
+    cart_items = relationship("Cart", back_populates="product", cascade="all, delete-orphan")
 
 class Image(Base):
     __tablename__ = "image_product_db"
@@ -85,13 +87,14 @@ class Image(Base):
 class Cart(Base):
     __tablename__ = 'cart_db'
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('users_db.id'))
-    product_id = Column(Integer, ForeignKey('product_db.id'))
+    user_id = Column(Integer, ForeignKey('users_db.id'), nullable=False)
+    product_id = Column(Integer, ForeignKey('product_db.id'), nullable=False)
     quantity = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.now)
 
-    user = relationship("User", backref="carts")
-    product = relationship("Product", backref="carts")
+    # Sesuaikan relationship ini:
+    user = relationship("User", back_populates="cart_items")
+    product = relationship("Product", back_populates="cart_items")
 
 class Order(Base):
     __tablename__ = 'order_db'

@@ -26,25 +26,22 @@
           <div class="space-y-1">
             <label class="text-sm font-semibold text-gray-600">Nama Lengkap</label>
             <input type="text" id="fullName" name="fullName" value="{{ user_data.first_name }} {{ user_data.last_name }}" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-[#0a66c2] outline-none transition-all">
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] outline-none">
           </div>
-
           <div class="space-y-1">
             <label class="text-sm font-semibold text-gray-600">Email LinkedIn</label>
-            <input type="email" id="email" name="email" value="{{ user_data.email }}" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-[#0a66c2] outline-none transition-all">
+            <input type="email" id="email" name="email" value="{{ user_data.email }}" required readonly
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 outline-none">
           </div>
-
           <div class="space-y-1">
             <label class="text-sm font-semibold text-gray-600">No. Telepon Aktif</label>
             <input type="tel" id="phone" name="phone" value="{{ user_data.phone_number }}" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-[#0a66c2] outline-none transition-all">
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] outline-none">
           </div>
-
           <div class="space-y-1">
             <label class="text-sm font-semibold text-gray-600">Kota / Alamat Tujuan</label>
             <input type="text" id="city" name="city" value="{{ user_data.address }}" required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] focus:border-[#0a66c2] outline-none transition-all">
+              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] outline-none">
           </div>
         </div>
       </section>
@@ -55,46 +52,70 @@
           <h4 class="text-lg font-bold text-gray-800">Rincian Produk</h4>
         </div>
 
-        <div class="flex flex-col md:flex-row gap-6">
-          <div class="flex-1 space-y-4">
-            <div>
-              <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Item</p>
-              <p class="text-lg font-semibold text-gray-900">{{ product_now.product_name }}</p>
-              <input type="hidden" id="product" value="{{ product_now.product_name }}">
-              <input type="hidden" id="category" value="{{ product_now.product_category }}">
+        <div class="space-y-4">
+          {% if cart_items %}
+            {% for item in cart_items %}
+            <div class="flex flex-col md:flex-row gap-6 bg-white p-4 rounded-lg border border-gray-200 order-item-row" 
+                 data-price="{{ item.product.product_price }}" 
+                 data-qty="{{ item.quantity }}"
+                 data-id="{{ item.id }}">
+              <div class="flex-1">
+                <p class="text-xs font-bold text-gray-500 uppercase">Nama Item</p>
+                <p class="text-md font-semibold text-gray-900">{{ item.product.product_name }}</p>
+                <p class="text-sm text-[#0a66c2] font-bold">Rp {{ "{:,.0f}".format(item.product.product_price | float).replace(',', '.') }} x {{ item.quantity }}</p>
+              </div>
+              <div class="md:w-1/3 text-right flex flex-col justify-center">
+                <p class="text-xs text-gray-500">Subtotal</p>
+                <p class="font-bold text-[#0a66c2]">Rp {{ "{:,.0f}".format((item.product.product_price | float) * (item.quantity | int)).replace(',', '.') }}</p>
+              </div>
             </div>
-            
-            <div class="flex items-center gap-6">
-               <div class="w-24">
-                  <label class="text-xs font-bold text-gray-500 uppercase">Kuantitas</label>
-                  <input type="number" id="quantity" name="quantity" min="1" value="1" required
-                    class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0a66c2] outline-none font-bold text-center">
-               </div>
-               <div class="flex-1">
-                  <p class="text-xs font-bold text-gray-500 uppercase">Harga Satuan</p>
-                  <p class="text-[#0a66c2] font-bold text-lg mt-1">Rp <span id="unitPriceValue">{{ product_now.product_price }}</span></p>
-               </div>
+            {% endfor %}
+          {% else %}
+            <div class="flex flex-col md:flex-row gap-6 bg-white p-4 rounded-lg border border-gray-200">
+              <div class="flex-1 space-y-4">
+                <div>
+                  <p class="text-xs font-bold text-gray-500 uppercase">Nama Item</p>
+                  <p class="text-lg font-semibold text-gray-900">{{ product_now.product_name }}</p>
+                </div>
+                <div class="flex items-center gap-6">
+                   <div class="w-32">
+                      <label class="text-xs font-bold text-gray-500 uppercase">Kuantitas</label>
+                      <div class="flex items-center mt-1 border border-gray-300 rounded-lg overflow-hidden bg-white">
+                        <button type="button" id="btnMinus" class="px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600">
+                          <i class="fas fa-minus text-xs"></i>
+                        </button>
+                        <input type="number" id="quantity" name="quantity" min="1" value="1" required
+                          class="w-full text-center font-bold border-none focus:ring-0 outline-none">
+                        <button type="button" id="btnPlus" class="px-3 py-2 bg-gray-50 hover:bg-gray-100 text-[#0a66c2]">
+                          <i class="fas fa-plus text-xs"></i>
+                        </button>
+                      </div>
+                   </div>
+                   <div class="flex-1">
+                      <p class="text-xs font-bold text-gray-500 uppercase">Harga Satuan</p>
+                      <p class="text-[#0a66c2] font-bold text-lg mt-1">Rp <span id="unitPriceValue">{{ "{:,.0f}".format(product_now.product_price | float).replace(',', '.') }}</span></p>
+                   </div>
+                </div>
+              </div>
+              <div class="md:w-1/3 bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300 flex flex-col justify-center text-center">
+                 <p class="text-sm text-gray-500">Subtotal</p>
+                 <input type="text" id="subTotal" readonly class="text-xl font-bold text-[#0a66c2] bg-transparent border-none outline-none text-center">
+              </div>
             </div>
-          </div>
-
-          <div class="md:w-1/3 bg-white p-4 rounded-lg border border-gray-300 flex flex-col justify-center text-center">
-             <p class="text-sm text-gray-500">Estimasi Subtotal</p>
-             <input type="text" id="subTotal" readonly class="text-xl font-bold text-[#0a66c2] bg-transparent border-none outline-none text-center cursor-default">
-          </div>
+          {% endif %}
         </div>
       </section>
 
       <section>
-        <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Metode Pembayaran</h4>
+        <h4 class="text-sm font-bold text-gray-500 uppercase mb-4">Metode Pembayaran</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <label class="relative flex items-center p-4 border-2 rounded-xl cursor-pointer hover:bg-blue-50 transition-all peer-checked:border-[#0a66c2]">
+          <label class="relative flex items-center p-4 border-2 rounded-xl cursor-pointer hover:bg-blue-50 transition-all">
             <input type="radio" name="payment" value="TRANSFER_BANK" required class="w-5 h-5 accent-[#0a66c2]">
             <div class="ml-4">
               <span class="block font-bold text-gray-800">Transfer Bank</span>
               <span class="text-xs text-gray-500">Verifikasi otomatis via sistem</span>
             </div>
           </label>
-
           <label class="relative flex items-center p-4 border-2 rounded-xl cursor-pointer hover:bg-blue-50 transition-all">
             <input type="radio" name="payment" value="COD" required class="w-5 h-5 accent-[#0a66c2]">
             <div class="ml-4">
@@ -106,25 +127,20 @@
       </section>
 
       <div class="pt-8 border-t border-gray-200">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6">
           <div>
             <p class="text-gray-500 text-sm">Total yang harus dibayar:</p>
             <p id="summaryTotal" class="text-3xl font-bold text-gray-900">Rp 0</p>
           </div>
-          <div class="flex items-center space-x-2 text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
-             <i class="fas fa-lock text-sm"></i>
-             <span class="text-xs font-bold uppercase tracking-widest">Enkripsi Aman</span>
+          <div class="bg-gray-100 px-4 py-2 rounded-full flex items-center gap-2">
+             <i class="fas fa-lock text-xs text-gray-400"></i>
+             <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Enkripsi Aman</span>
           </div>
         </div>
 
-        <div class="flex flex-col md:flex-row gap-4">
-          <button type="button" onclick="window.history.back()"
-            class="flex-1 px-6 py-3 rounded-full border border-[#0a66c2] text-[#0a66c2] font-bold hover:bg-blue-50 transition-all order-2 md:order-1">
-            Kembali
-          </button>
-          <button type="submit" class="submit-btn flex-1 px-6 py-3 rounded-full bg-[#0a66c2] text-white font-bold shadow-md hover:bg-[#004182] transition-all order-1 md:order-2">
-            Konfirmasi Pesanan
-          </button>
+        <div class="flex gap-4">
+          <button type="button" onclick="window.history.back()" class="flex-1 px-6 py-3 rounded-full border border-[#0a66c2] text-[#0a66c2] font-bold">Kembali</button>
+          <button type="submit" class="submit-btn flex-1 px-6 py-3 rounded-full bg-[#0a66c2] text-white font-bold shadow-md hover:bg-[#004182]">Konfirmasi Pesanan</button>
         </div>
       </div>
     </form>
@@ -132,122 +148,103 @@
 </main>
 
 <script>
-class OrderCalculator {
-  constructor() {
-    const unitPriceEl = document.getElementById('unitPriceValue');
-    // Bersihkan karakter non-numeric sebelum parse
-    const rawPrice = unitPriceEl ? unitPriceEl.textContent.replace(/[^\d]/g, '') : "0";
-    this.productPrice = parseFloat(rawPrice);
-    this.init();
-  }
-
-  init() {
-    const qtyInput = document.getElementById('quantity');
-    if (qtyInput) {
-      qtyInput.addEventListener('input', () => this.updateTotals());
-      qtyInput.addEventListener('change', () => this.validateQty());
-    }
-    this.updateTotals();
-  }
-
-  validateQty() {
-    const qtyInput = document.getElementById('quantity');
-    if (qtyInput.value < 1) qtyInput.value = 1;
-    this.updateTotals();
-  }
-
-  updateTotals() {
-    const qty = parseInt(document.getElementById('quantity').value) || 1;
-    const subtotal = qty * this.productPrice;
-    
-    const formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(subtotal);
-    document.getElementById('subTotal').value = formatted;
-    document.getElementById('summaryTotal').textContent = formatted;
-  }
-
-  getRawTotal() {
-    const qty = parseInt(document.getElementById('quantity').value) || 1;
-    return qty * this.productPrice;
-  }
+function formatIDR(number) {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const calculator = new OrderCalculator();
-  const orderForm = document.getElementById('orderForm');
+    const isMultiItem = document.querySelectorAll('.order-item-row').length > 0;
+    const summaryTotalEl = document.getElementById('summaryTotal');
+    const qtyInput = document.getElementById('quantity');
+    const subTotalInput = document.getElementById('subTotal');
+    const btnMinus = document.getElementById('btnMinus');
+    const btnPlus = document.getElementById('btnPlus');
+    
+    // Ambil harga asli dari Backend via Jinja2
+    const productPrice = parseFloat("{{ product_now.product_price if product_now else 0 }}");
 
-  orderForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-
-    const payment = document.querySelector('input[name="payment"]:checked')?.value;
-    if (!payment) {
-      Swal.fire({ icon: 'info', title: 'Metode Pembayaran', text: 'Silakan pilih metode pembayaran untuk melanjutkan.', confirmButtonColor: '#0a66c2' });
-      return;
+    function calculateTotal() {
+        let grandTotal = 0;
+        if (isMultiItem) {
+            document.querySelectorAll('.order-item-row').forEach(row => {
+                const price = parseFloat(row.getAttribute('data-price'));
+                const qty = parseInt(row.getAttribute('data-qty'));
+                grandTotal += (price * qty);
+            });
+        } else if (qtyInput) {
+            const qty = parseInt(qtyInput.value) || 1;
+            grandTotal = qty * productPrice;
+            if(subTotalInput) subTotalInput.value = formatIDR(grandTotal);
+        }
+        summaryTotalEl.textContent = formatIDR(grandTotal);
     }
 
-    const btn = document.querySelector('.submit-btn');
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
-
-    const formData = {
-      productId: "{{ product_now.id }}",
-      fullName: document.getElementById('fullName').value,
-      email: document.getElementById('email').value,
-      phone: document.getElementById('phone').value,
-      city: document.getElementById('city').value,
-      product: document.getElementById('product').value,
-      quantity: document.getElementById('quantity').value,
-      payment: payment,
-      total: calculator.getRawTotal()
-    };
-
-    fetch('/api/store', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Pesanan Dikonfirmasi',
-          text: 'Pesanan Anda telah berhasil dibuat dan sedang dalam antrean.',
-          confirmButtonText: 'Buka Riwayat Pesanan',
-          confirmButtonColor: '#0a66c2',
-          allowOutsideClick: false
-        }).then(() => {
-          window.location.href = "{{ url_for('order_user') }}";
+    // Event Listener Tombol Quantity
+    if (qtyInput && btnMinus && btnPlus) {
+        btnMinus.addEventListener('click', () => {
+            if (qtyInput.value > 1) {
+                qtyInput.value = parseInt(qtyInput.value) - 1;
+                calculateTotal();
+            }
         });
-      } else {
-        throw new Error(data.message);
-      }
-    })
-    .catch(err => {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-      Swal.fire({ icon: 'error', title: 'Terjadi Kesalahan', text: err.message, confirmButtonColor: '#0a66c2' });
+        btnPlus.addEventListener('click', () => {
+            qtyInput.value = parseInt(qtyInput.value) + 1;
+            calculateTotal();
+        });
+        qtyInput.addEventListener('input', calculateTotal);
+    }
+
+    calculateTotal();
+
+    // Form Submission
+    document.getElementById('orderForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const payment = document.querySelector('input[name="payment"]:checked')?.value;
+        if (!payment) {
+            Swal.fire('Info', 'Pilih metode pembayaran.', 'info');
+            return;
+        }
+
+        const btn = document.querySelector('.submit-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+
+        const payload = {
+            fullName: document.getElementById('fullName').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            city: document.getElementById('city').value,
+            payment: payment,
+            productId: "{{ product_now.id if product_now else '' }}",
+            quantity: qtyInput ? qtyInput.value : 0
+        };
+
+        // Ganti endpoint ke API gabungan Anda
+        fetch('/api/order/process', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire('Berhasil', data.message, 'success').then(() => window.location.href = "{{ url_for('order_user') }}");
+            } else {
+                throw new Error(data.message);
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerHTML = 'Konfirmasi Pesanan';
+            Swal.fire('Gagal', err.message, 'error');
+        });
     });
-  });
 });
 </script>
 
 <style>
-  /* LinkedIn Style Customization */
-  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  
-  .submit-btn:hover {
-    box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3);
-  }
-
-  /* Focus effect */
-  input:focus {
-    border-color: #0a66c2 !important;
-    box-shadow: 0 0 0 1px #0a66c2 !important;
-  }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3); }
 </style>
 
 {% endblock %}

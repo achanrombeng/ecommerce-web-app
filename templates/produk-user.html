@@ -202,15 +202,58 @@
   categoryFilter?.addEventListener("change", filterProducts);
   sortFilter?.addEventListener("change", sortProducts);
 
-  function addToCart(id) {
-    Swal.fire({
-      icon: "success",
-      title: "Keranjang",
-      text: "Produk berhasil ditambahkan",
-      showConfirmButton: false,
-      timer: 1500,
-      iconColor: '#0a66c2'
+ function addToCart(productId) {
+    const event = window.event; // Menangkap global event jika tidak dikirim eksplisit
+    const btn = event.currentTarget || event.target.closest('button');
+    
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    fetch(`/add-to-cart/${productId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Notifikasi Sukses
+            Swal.fire({
+                icon: "success",
+                title: "Berhasil!",
+                text: data.message,
+                showConfirmButton: false,
+                timer: 1500,
+                iconColor: '#0a66c2',
+                toast: true, // Ubah jadi toast agar tidak mengganggu flow belanja
+                position: 'top-end'
+            });
+        } else {
+            // Notifikasi Gagal (Misal: Stok Habis)
+            Swal.fire({
+                icon: "error",
+                title: "Gagal",
+                text: data.message,
+                confirmButtonColor: '#0a66c2'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Terjadi kesalahan jaringan",
+            confirmButtonColor: '#0a66c2'
+        });
+    })
+    .finally(() => {
+        // Kembalikan tombol ke keadaan semula
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
     });
-  }
+}
 </script>
 {% endblock %}

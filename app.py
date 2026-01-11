@@ -1,7 +1,7 @@
 from datetime import datetime
 import traceback
 from venv import logger
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
@@ -987,135 +987,98 @@ def detect_mime_type(image_bytes):
         # Default fallback
         return 'image/jpeg'
     
-@app.route('/form-order-user', methods=['GET', 'POST'])
+@app.route('/form-order-user', methods=['GET'])
 @login_required
 def form_order_user():
-    user_data = db.session.query(User).filter_by(id=current_user.id).first()
-    product_now = db.session.query(Product).filter_by(id=request.args.get('product_id')).first()
-    if request.method == 'POST':
-        try:
-            product_id = request.form.get('product_id')
-            quantity = int(request.form.get('quantity', 1))
+    user_data = current_user
+    cart_ids = session.get('checkout_cart_ids', [])
+    cart_items = []
+    
+    if cart_ids:
+        cart_items = db.session.query(Cart).filter(Cart.id.in_(cart_ids), Cart.user_id == current_user.id).all()
+        for item in cart_items:
+            item.product.product_price = float(item.product.product_price or 0)
             
-            product = db.session.query(Product).filter_by(id=product_id).first()
-            if not product:
-                flash('Produk tidak ditemukan!', 'error')
-                return redirect(url_for('produk_user'))
-            
-            if product.product_stock < quantity:
-                flash('Stok produk tidak mencukupi!', 'error')
-                return redirect(url_for('form_order_user', product_id=product_id))
-            
-            # Buat order baru
-            new_order = Order(
-                user_id=current_user.id,
-                created_at=datetime.now(),
-                amount=product.product_price * quantity
-            )
-            db.session.add(new_order)
-            db.session.commit()
-            
-            # Tambah produk ke order
-            product_order = ProductOrder(
-                product_id=product.id,
-                order_id=new_order.id,
-                quantity=quantity
-            )
-            db.session.add(product_order)
-            
-            # Update stok produk
-            product.product_stock -= quantity
-            
-            db.session.commit()
-            
-            flash('Order berhasil dibuat!', 'success')
-            return redirect(url_for('order_user'))
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error creating order: {e}")
-            import traceback
-            traceback.print_exc()
-            flash('Error membuat order: ' + str(e), 'error')
+    product_id = request.args.get('product_id')
+    product_now = None
+    if product_id and not cart_items:
+        product_now = db.session.query(Product).get(product_id)
+        if product_now:
+            product_now.product_price = float(product_now.product_price or 0)
 
+    return render_template('form_order_user.html', user_data=user_data, cart_items=cart_items, product_now=product_now)
 
-    return render_template('form_order_user.html', user_data=user_data, product_now=product_now)
-
-@app.route('/api/store', methods=['POST'])
+@app.route('/api/order/process', methods=['POST'])
 @login_required
-def store_data():
+def process_order():
     try:
-        if not request.is_json:
-            return jsonify({'success': False, 'message': 'JSON required'}), 400
-
         data = request.get_json()
-
-        required = ['productId', 'quantity', 'payment']
-        missing = [f for f in required if f not in data]
-        if missing:
-            return jsonify({
-                'success': False,
-                'message': f'Field wajib: {", ".join(missing)}'
-            }), 400
-
         
-        product = db.session.query(Product).filter_by(id=data['productId']).first()
-        if not product:
-            return jsonify({'success': False, 'message': 'Produk tidak ditemukan'}), 404
-
-        quantity = int(data['quantity'])
-        if quantity < 1:
-            return jsonify({'success': False, 'message': 'Quantity minimal 1'}), 400
-        if quantity > product.product_stock:
-            return jsonify({'success': False, 'message': 'Stok produk tidak mencukupi'}), 400
+        # Ambil data dari session keranjang
+        cart_ids = session.get('checkout_cart_ids', [])
         
-        
+        items_to_order = []
+        total_amount = 0 # Inisialisasi sebagai Integer/Float
 
-        payment_method = PaymentMethodEnum(data['payment'])
+        if cart_ids:
+            # Skenario A: DARI KERANJANG
+            cart_items = db.session.query(Cart).filter(Cart.id.in_(cart_ids)).all()
+            for item in cart_items:
+                # KONVERSI HARGA KE FLOAT SEBELUM DIKALIKAN
+                price = float(item.product.product_price or 0)
+                qty = int(item.quantity)
+                total_amount += (price * qty)
+                items_to_order.append((item.product, qty, item))
+        else:
+            # Skenario B: BELI LANGSUNG
+            product = db.session.query(Product).get(data.get('productId'))
+            if not product:
+                return jsonify({'success': False, 'message': 'Produk tidak ditemukan'}), 404
+            
+            # KONVERSI HARGA KE FLOAT SEBELUM DIKALIKAN
+            price = float(product.product_price or 0)
+            qty = int(data.get('quantity', 1))
+            total_amount = price * qty
+            items_to_order.append((product, qty, None))
 
-        total_amount = int(product.product_price) * int(quantity)
-        print(f"Debug: total_amount calculated as {total_amount}")
-
+        # Buat Order Baru
         new_order = Order(
             user_id=current_user.id,
-            user=current_user,
-            products_ordered=[product],
-            amount=total_amount,
-            payment_method=payment_method,
-            status=OrderStatusEnum.PENDING,
-            notes=data.get('notes', '')
+            amount=total_amount, # Sekarang total_amount dipastikan numerik
+            payment_method=data.get('payment'),
+            status="PENDING",
+            created_at=datetime.now()
         )
-
+        
         db.session.add(new_order)
         db.session.flush()
 
-        product_order = ProductOrder(
-            product_id=product.id,
-            order_id=new_order.id,
-            quantity=quantity
-        )
+        # Simpan Detail Order
+        for prod, qty, cart_obj in items_to_order:
+            product_order = ProductOrder(
+                product_id=prod.id, 
+                order_id=new_order.id, 
+                quantity=qty
+            )
+            db.session.add(product_order)
+            
+            # Kurangi stok
+            prod.product_stock -= qty
+            
+            # Hapus dari keranjang jika ada
+            if cart_obj:
+                db.session.delete(cart_obj)
 
-        db.session.add(product_order)
         db.session.commit()
+        session.pop('checkout_cart_ids', None)
 
-        return jsonify({
-            'success': True,
-            'message': 'Order berhasil dibuat',
-            'order_id': new_order.id
-        }), 201
-
-    except ValueError:
-        return jsonify({
-            'success': False,
-            'message': 'Metode pembayaran tidak valid'
-        }), 400
+        return jsonify({'success': True, 'message': 'Order berhasil dibuat!'}), 201
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': f'Terjadi kesalahan: {str(e)}'
-        }), 500
-
+        # Log error untuk debugging di terminal
+        print(f"Error: {str(e)}")
+        return jsonify({'success': False, 'message': f'Terjadi kesalahan: {str(e)}'}), 500
 
 @app.route('/order-user')
 @login_required
@@ -1147,27 +1110,152 @@ def order_user():
             po.product.image_url = get_image_data(po.product)
         
     return render_template('order-user.html', orders=orders)
-@app.route('/add-to-cart', methods=['POST'])
-@login_required
-def add_to_cart():
-    product_id = request.form.get('product_id')
-    quantity = int(request.form.get('quantity', 1))
-    product = db.session.query(Product).filter_by(id=product_id).first()
-    if not product:
-        flash('Produk tidak ditemukan!', 'error')
-        return redirect(url_for('produk_user'))
-    if product.product_stock < quantity:
-        flash('Stok produk tidak mencukupi!', 'error')
-        return redirect(url_for('produk_user'))
-    product.product_stock -= quantity
-    db.session.commit()
-    return redirect(url_for('produk_user'))
 
-@app.route('/cart-user')
+
+
+@app.route('/cart')
+@login_required
 def cart_user():
-    # Mengampil data cart dari user saat ini
-    # cart = db.session.query(Cart).filter_by(user_id=current_user.id).all()
-    return render_template('cart-user.html')
+    # Ambil items dengan relasi produk dan gambarnya
+    cart_items = db.session.query(Cart).options(
+        joinedload(Cart.product).joinedload(Product.images)
+    ).filter_by(user_id=current_user.id).all()
+    
+    
+    # Fungsi konversi yang sama dengan halaman order
+    def get_image_data(product):
+        if product.images and len(product.images) > 0:
+            img = product.images[0]
+            if img.file_data:
+                try:
+                    if isinstance(img.file_data, str) and img.file_data.startswith('data:'):
+                        return img.file_data
+                    image_bytes = bytes(img.file_data)
+                    mime_type = detect_mime_type(image_bytes)
+                    base64_image = base64.b64encode(image_bytes).decode('utf-8')
+                    return f'data:{mime_type};base64,{base64_image}'
+                except Exception as e:
+                    print(f"Error: {e}")
+        return None
+
+    # Mengisi atribut image_url secara dinamis
+    for item in cart_items:
+        item.product.image_url = get_image_data(item.product)
+
+    subtotal = sum(float(item.product.product_price or 0) * int(item.quantity or 0) for item in cart_items)
+    
+    return render_template('cart-user.html', cart_items=cart_items, subtotal=subtotal, total=subtotal)
+
+@app.route('/add-to-cart/<int:product_id>', methods=['POST'])
+@login_required
+def add_to_cart(product_id):
+    try:
+        # gunakan first() untuk mendapatkan satu produk
+        product = db.session.query(Product).filter_by(id=product_id).first()
+        
+        if not product:
+            return jsonify({'success': False, 'message': 'Produk tidak ditemukan'}), 404
+        
+        # Cek stok (Aktifkan kembali agar valid)
+        if product.product_stock <= 0:
+            return jsonify({'success': False, 'message': 'Stok produk habis!'}), 400
+
+        # Cek apakah produk sudah ada di keranjang user
+        # Pastikan tipe data konsisten (Integer)
+        item = db.session.query(Cart).filter_by(
+            user_id=int(current_user.id), 
+            product_id=int(product_id)
+        ).first()
+        
+        if item:
+            # Jika stok mencukupi, tambah quantity
+            if item.quantity < product.product_stock:
+                item.quantity += 1
+            else:
+                return jsonify({'success': False, 'message': 'Jumlah melebihi stok tersedia'}), 400
+        else:
+            new_item = Cart(user_id=current_user.id, product_id=product_id, quantity=1)
+            db.session.add(new_item)
+        
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'{product.product_name} ditambahkan ke keranjang'})
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error Cart: {str(e)}") # Log untuk debugging
+        return jsonify({'success': False, 'message': 'Gagal menambahkan produk'}), 500
+    
+@app.route('/api/cart/checkout', methods=['POST'])
+@login_required
+def cart_checkout_api():
+    try:
+        data = request.get_json()
+        cart_ids = data.get('cart_ids', [])
+
+        if not cart_ids:
+            return jsonify({'success': False, 'message': 'Pilih produk dahulu'}), 400
+
+        # Simpan ke session agar bisa dibaca di halaman form-order
+        session['checkout_cart_ids'] = cart_ids
+        
+        return jsonify({
+            'success': True,
+            'message': 'Lanjut ke pengisian form...',
+            'redirect_url': url_for('form_order_user') # Redirect ke halaman form
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+    
+@app.route('/cart/delete/<int:item_id>', methods=['POST'])
+@login_required
+def delete_cart_item(item_id):
+    item = db.session.query(Cart).filter_by(id=item_id).first()
+    if not item:
+        return jsonify({'success': False, 'message': 'Item tidak ditemukan'}), 404
+    if item.user_id == current_user.id:
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Produk dihapus'})
+    return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
+@app.route('/cart/update/<int:product_id>', methods=['POST'])
+@login_required
+def update_cart_qty(product_id):
+    try:
+        data = request.get_json()
+        action = data.get('action')
+        
+        # Cari item keranjang milik user yang sedang login
+        cart_item = db.session.query(Cart).filter_by(id=product_id, user_id=current_user.id).first()
+        
+        if not cart_item:
+            return jsonify({'success': False, 'message': 'Item tidak ditemukan'}), 404
+        
+        if action == 'plus':
+            cart_item.quantity += 1
+        elif action == 'minus':
+            if cart_item.quantity > 1:
+                cart_item.quantity -= 1
+            else:
+                return jsonify({'success': False, 'message': 'Jumlah minimal adalah 1'}), 400
+        else:
+            return jsonify({'success': False, 'message': 'Aksi tidak valid'}), 400
+
+        db.session.commit()
+        
+        # Hitung subtotal baru untuk item ini
+        new_subtotal = float(cart_item.product.product_price) * cart_item.quantity
+        
+        return jsonify({
+            'success': True,
+            'new_qty': cart_item.quantity,
+            'new_subtotal': new_subtotal,
+            'message': 'Berhasil memperbarui jumlah'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/profile-user' , methods=['GET'])
 def profile_user():
