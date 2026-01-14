@@ -10,7 +10,10 @@ from sqlalchemy.orm import joinedload
 from models import GenderEnum, Image, Order, OrderStatusEnum, PaymentMethodEnum, Product, ProductOrder, RoleEnum, User, db, Cart
 import os
 import base64
+import uuid
+import midtransclient
 from dotenv import load_dotenv
+from authlib.integrations.flask_client import OAuth
 
 load_dotenv()
 
@@ -27,7 +30,21 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 
-import base64
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.environ.get('OAUTH_CLIENT_ID'),
+    client_secret=os.environ.get('OAUTH_CLIENT_SECRET'),
+    server_metadata_url=os.environ.get('OAUTH_SERVER_METADATA_URL'),
+    client_kwargs={'scope': 'openid email profile'}
+)
+
+# konfigurasi Midtrans
+snap = midtransclient.Snap(
+    is_production=False,  # Set ke False untuk Sandbox atau development
+    server_key=os.environ.get('SNAP_SERVER_KEY'),
+    client_key=os.environ.get('SNAP_CLIENT_KEY')
+)
 
 # Tambahkan baris ini agar Jinja2 mengenali filter b64encode
 @app.template_filter('b64encode')
@@ -40,9 +57,6 @@ def b64encode_filter(data):
 def load_user(user_id):
     return db.session.query(User).filter_by(id=user_id).first()
 
-@app.route('/')
-def index():
-    return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -123,6 +137,69 @@ def login():
 
         
     return render_template('login.html')
+
+@app.route('/login/google')
+def login_google():
+    # Mengarahkan user ke Google
+    redirect_uri = url_for('google_auth', _external=True)
+    print(f"Redirect URI yang dikirim ke Google: {redirect_uri}")
+    return google.authorize_redirect(redirect_uri)
+
+@app.route('/auth/google/callback')
+def google_auth():
+    try:
+        token = google.authorize_access_token()
+        # Cara paling aman mengambil data user
+        respon = google.get('https://openidconnect.googleapis.com/v1/userinfo')
+        user_info = respon.json()
+        
+        print(f"DEBUG USER_INFO: {user_info}") # LIHAT DI TERMINAL 
+
+        email = user_info.get('email')
+        if not email:
+            flash("Gagal mendapatkan email dari Google.", "error")
+            return redirect(url_for('login'))
+
+        user = db.session.query(User).filter_by(email=email).first()
+
+        if not user:
+            # Mapping data dengan default value untuk menghindari NOT NULL error
+            user = User(
+                email=email,
+                first_name=user_info.get('given_name', 'User'),
+                last_name=user_info.get('family_name', ''),
+                password_hash=str(uuid.uuid4()), 
+                is_active=True,
+                role=RoleEnum.USER, 
+                gender=GenderEnum.OTHER,
+                # Tambahkan field kosong jika di DB diatur NOT NULL
+                phone_number='-', 
+                address='-'
+            )
+            db.session.add(user)
+            db.session.commit()
+
+        login_user(user)
+        flash(f'Login berhasil! Selamat datang {user.first_name}', 'success')
+        
+        if user.role == RoleEnum.ADMIN:
+            return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('dashboard'))
+
+    except Exception as e:
+        db.session.rollback()
+        # Print detail error ke terminal agar kita tahu penyebab pastinya
+        import traceback
+        traceback.print_exc() 
+        print(f"Error Detail: {str(e)}")
+        flash("Gagal login dengan Google.", "error")
+        return redirect(url_for('login'))
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saat Google Auth: {str(e)}")
+        flash("Gagal login dengan Google.", "error")
+        return redirect(url_for('login'))
 
 @app.route('/dashboard')
 @login_required
@@ -641,7 +718,7 @@ def admin_orders():
                 pass
         
         if status_filter:
-            # Sesuaikan dengan Enum Anda
+            # Sesuaikan dengan Enum 
             if status_filter.lower() == 'pending':
                 query = query.filter(Order.status == OrderStatusEnum.PENDING)
             elif status_filter.lower() == 'approve':
@@ -728,7 +805,7 @@ def admin_users():
         data = []
         for user in users:
             # Mengambil URL profil atau None
-            # Pastikan field 'profile_picture' ada di Model User Anda
+            # Pastikan field 'profile_picture' ada di Model User 
             p_pic = getattr(user, 'profile_picture', None)
             
             data.append({
@@ -859,9 +936,9 @@ def admin_update_user(user_id):
         if 'profile_picture' in request.files:
             file = request.files['profile_picture']
             if file and file.filename != '':
-                # Baca file dan ubah ke Base64 (atau simpan ke folder sesuai struktur Anda)
+                # Baca file dan ubah ke Base64 (atau simpan ke folder sesuai struktur )
                 image_data = file.read()
-                # Jika Anda menyimpan sebagai string base64 di database:
+                # Jika  menyimpan sebagai string base64 di database:
                 base64_image = base64.b64encode(image_data).decode('utf-8')
                 user.profile_picture = f"data:{file.content_type};base64,{base64_image}"
 
@@ -1008,53 +1085,106 @@ def form_order_user():
 
     return render_template('form_order_user.html', user_data=user_data, cart_items=cart_items, product_now=product_now)
 
+from datetime import datetime
+from flask import jsonify, request, session
+from flask_login import login_required, current_user
+# Pastikan snap sudah diinisialisasi di luar fungsi
+
 @app.route('/api/order/process', methods=['POST'])
 @login_required
 def process_order():
     try:
         data = request.get_json()
+        payment_method = data.get('payment')
         
-        # Ambil data dari session keranjang
+        # 1. Ambil data dari session atau productId
         cart_ids = session.get('checkout_cart_ids', [])
-        
         items_to_order = []
-        total_amount = 0 # Inisialisasi sebagai Integer/Float
+        total_amount = 0
+        midtrans_items = [] # Untuk rincian di struk Midtrans
 
         if cart_ids:
-            # Skenario A: DARI KERANJANG
+            # SKENARIO A: DARI KERANJANG
             cart_items = db.session.query(Cart).filter(Cart.id.in_(cart_ids)).all()
+            if not cart_items:
+                return jsonify({'success': False, 'message': 'Keranjang kosong'}), 400
+                
             for item in cart_items:
-                # KONVERSI HARGA KE FLOAT SEBELUM DIKALIKAN
-                price = float(item.product.product_price or 0)
+                price = int(float(item.product.product_price or 0))
                 qty = int(item.quantity)
-                total_amount += (price * qty)
+                subtotal = price * qty
+                total_amount += subtotal
+                
                 items_to_order.append((item.product, qty, item))
+                # Format untuk Midtrans
+                midtrans_items.append({
+                    "id": str(item.product.id),
+                    "price": price,
+                    "quantity": qty,
+                    "name": item.product.product_name[:50] # Maks 50 karakter
+                })
         else:
-            # Skenario B: BELI LANGSUNG
+            # SKENARIO B: BELI LANGSUNG
             product = db.session.query(Product).get(data.get('productId'))
             if not product:
                 return jsonify({'success': False, 'message': 'Produk tidak ditemukan'}), 404
             
-            # KONVERSI HARGA KE FLOAT SEBELUM DIKALIKAN
-            price = float(product.product_price or 0)
+            price = int(float(product.product_price or 0))
             qty = int(data.get('quantity', 1))
             total_amount = price * qty
+            
             items_to_order.append((product, qty, None))
+            midtrans_items.append({
+                "id": str(product.id),
+                "price": price,
+                "quantity": qty,
+                "name": product.product_name[:50]
+            })
 
-        # Buat Order Baru
+        # 2. Buat Order Baru di Database
         new_order = Order(
             user_id=current_user.id,
-            amount=total_amount, # Sekarang total_amount dipastikan numerik
-            payment_method=data.get('payment'),
-            status="PENDING",
+            amount=total_amount,
+            payment_method=payment_method,
+            status="PENDING", # Default status
             created_at=datetime.now()
         )
         
         db.session.add(new_order)
-        db.session.flush()
+        db.session.flush() # Ambil ID order tanpa commit dulu
 
-        # Simpan Detail Order
+        # 3. Logika Midtrans (Hanya jika TRANSFER_BANK)
+        snap_token = None
+        if payment_method == 'TRANSFER_BANK':
+            midtrans_order_id = f"ORDER-{new_order.id}-{int(datetime.now().timestamp())}"
+            
+            # Gabungkan nama depan dan belakang jika tersedia
+            full_name_db = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip() or "Customer"
+
+            param = {
+                "transaction_details": {
+                    "order_id": midtrans_order_id,
+                    "gross_amount": int(total_amount)
+                },
+                "item_details": midtrans_items,
+                "customer_details": {
+                    "first_name": data.get('fullName') or full_name_db,
+                    "email": data.get('email') or current_user.email,
+                    "phone": data.get('phone') or current_user.phone_number or ""
+                },
+                "usage_limit": 1
+            }
+
+            transaction = snap.create_transaction(param)
+            snap_token = transaction['token']
+            new_order.midtrans_order_id = midtrans_order_id 
+
+        # 4. Simpan Detail Produk & Kurangi Stok
         for prod, qty, cart_obj in items_to_order:
+            if prod.product_stock < qty:
+                db.session.rollback()
+                return jsonify({'success': False, 'message': f'Stok {prod.product_name} tidak cukup'}), 400
+                
             product_order = ProductOrder(
                 product_id=prod.id, 
                 order_id=new_order.id, 
@@ -1062,23 +1192,26 @@ def process_order():
             )
             db.session.add(product_order)
             
-            # Kurangi stok
+            # Kurangi stok (Sistem "Booking")
             prod.product_stock -= qty
             
-            # Hapus dari keranjang jika ada
             if cart_obj:
                 db.session.delete(cart_obj)
 
+        # 5. Finalisasi
         db.session.commit()
-        session.pop('checkout_cart_ids', None)
+        session.pop('checkout_cart_ids', None) # Bersihkan session checkout
 
-        return jsonify({'success': True, 'message': 'Order berhasil dibuat!'}), 201
+        return jsonify({
+            'success': True, 
+            'message': 'Pesanan berhasil dibuat!' if payment_method == 'COD' else 'Silahkan selesaikan pembayaran.',
+            'snap_token': snap_token
+        }), 201
 
     except Exception as e:
         db.session.rollback()
-        # Log error untuk debugging di terminal
-        print(f"Error: {str(e)}")
-        return jsonify({'success': False, 'message': f'Terjadi kesalahan: {str(e)}'}), 500
+        print(f"CRITICAL ERROR: {str(e)}")
+        return jsonify({'success': False, 'message': 'Internal Server Error'}), 500
 
 @app.route('/order-user')
 @login_required

@@ -147,22 +147,37 @@
   </div>
 </main>
 
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="Mid-client-8lZEpWbfVKH_TiU6"></script>
+
 <script>
+/**
+ * Helper: Format angka ke format Rupiah
+ */
 function formatIDR(number) {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+    return new Intl.NumberFormat('id-ID', { 
+        style: 'currency', 
+        currency: 'IDR', 
+        minimumFractionDigits: 0 
+    }).format(number);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const isMultiItem = document.querySelectorAll('.order-item-row').length > 0;
+    // --- 1. INISIALISASI VARIABEL ---
+    const orderForm = document.getElementById('orderForm');
     const summaryTotalEl = document.getElementById('summaryTotal');
+    const isMultiItem = document.querySelectorAll('.order-item-row').length > 0;
     const qtyInput = document.getElementById('quantity');
     const subTotalInput = document.getElementById('subTotal');
     const btnMinus = document.getElementById('btnMinus');
     const btnPlus = document.getElementById('btnPlus');
+    const submitBtn = document.querySelector('.submit-btn');
     
-    // Ambil harga asli dari Backend via Jinja2
+    // Harga asli dari backend (Jinja2)
     const productPrice = parseFloat("{{ product_now.product_price if product_now else 0 }}");
 
+    /**
+     * Fungsi menghitung total belanja
+     */
     function calculateTotal() {
         let grandTotal = 0;
         if (isMultiItem) {
@@ -174,15 +189,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (qtyInput) {
             const qty = parseInt(qtyInput.value) || 1;
             grandTotal = qty * productPrice;
-            if(subTotalInput) subTotalInput.value = formatIDR(grandTotal);
+            if (subTotalInput) subTotalInput.value = formatIDR(grandTotal);
         }
         summaryTotalEl.textContent = formatIDR(grandTotal);
     }
 
-    // Event Listener Tombol Quantity
+    // --- 2. EVENT LISTENERS KUANTITAS ---
     if (qtyInput && btnMinus && btnPlus) {
         btnMinus.addEventListener('click', () => {
-            if (qtyInput.value > 1) {
+            if (parseInt(qtyInput.value) > 1) {
                 qtyInput.value = parseInt(qtyInput.value) - 1;
                 calculateTotal();
             }
@@ -194,32 +209,38 @@ document.addEventListener('DOMContentLoaded', () => {
         qtyInput.addEventListener('input', calculateTotal);
     }
 
+    // Hitung total saat halaman pertama kali dimuat
     calculateTotal();
 
-    // Form Submission
-    document.getElementById('orderForm').addEventListener('submit', function(e) {
+    // --- 3. LOGIKA FORM SUBMISSION & SNAP ---
+    orderForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        const payment = document.querySelector('input[name="payment"]:checked')?.value;
-        if (!payment) {
-            Swal.fire('Info', 'Pilih metode pembayaran.', 'info');
+
+        // Validasi Metode Pembayaran
+        const paymentRadio = document.querySelector('input[name="payment"]:checked');
+        if (!paymentRadio) {
+            Swal.fire('Info', 'Silakan pilih metode pembayaran.', 'info');
             return;
         }
+        const paymentMethod = paymentRadio.value;
 
-        const btn = document.querySelector('.submit-btn');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+        // UI Loading State
+        submitBtn.disabled = true;
+        const originalBtnContent = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
 
+        // Persiapkan Data Payload
         const payload = {
             fullName: document.getElementById('fullName').value,
             email: document.getElementById('email').value,
             phone: document.getElementById('phone').value,
             city: document.getElementById('city').value,
-            payment: payment,
+            payment: paymentMethod,
             productId: "{{ product_now.id if product_now else '' }}",
             quantity: qtyInput ? qtyInput.value : 0
         };
 
-        // Ganti endpoint ke API gabungan Anda
+        // Kirim ke Backend
         fetch('/api/order/process', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -228,20 +249,46 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                Swal.fire('Berhasil', data.message, 'success').then(() => window.location.href = "{{ url_for('order_user') }}");
+                // KONDISI A: TRANSFER BANK (Gunakan Snap)
+                if (data.snap_token) {
+                    window.snap.pay(data.snap_token, {
+                        onSuccess: function(result) {
+                            Swal.fire('Berhasil', 'Pembayaran sukses!', 'success')
+                                .then(() => window.location.href = "{{ url_for('order_user') }}");
+                        },
+                        onPending: function(result) {
+                            Swal.fire('Pending', 'Pesanan disimpan. Silakan selesaikan pembayaran.', 'info')
+                                .then(() => window.location.href = "{{ url_for('order_user') }}");
+                        },
+                        onError: function(result) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnContent;
+                            Swal.fire('Gagal', 'Terjadi kesalahan pada pembayaran.', 'error');
+                        },
+                        onClose: function() {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnContent;
+                            Swal.fire('Perhatian', 'Anda menutup jendela pembayaran.', 'warning');
+                        }
+                    });
+                } 
+                // KONDISI B: COD (Langsung Selesai)
+                else {
+                    Swal.fire('Berhasil', 'Pesanan COD berhasil dibuat!', 'success')
+                        .then(() => window.location.href = "{{ url_for('order_user') }}");
+                }
             } else {
-                throw new Error(data.message);
+                throw new Error(data.message || 'Gagal memproses pesanan.');
             }
         })
         .catch(err => {
-            btn.disabled = false;
-            btn.innerHTML = 'Konfirmasi Pesanan';
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnContent;
             Swal.fire('Gagal', err.message, 'error');
         });
     });
 });
 </script>
-
 <style>
   input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3); }

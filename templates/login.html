@@ -29,6 +29,24 @@
         }
     </style>
 </head>
+<!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="fixed top-4 right-4 z-50 space-y-2">
+      {% for category, message in messages %}
+      <div
+        class="px-6 py-4 rounded-lg shadow-lg border-l-4 {% if category == 'error' %}bg-red-100 border-red-500 text-red-700{% elif category == 'success' %}bg-green-100 border-green-500 text-green-700{% else %}bg-blue-100 border-blue-500 text-blue-700{% endif %}"
+      >
+        <div class="flex items-center">
+          <i
+            class="fas {% if category == 'error' %}fa-exclamation-circle{% elif category == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %} mr-3"
+          ></i>
+          <span>{{ message }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
 <body class="linkedin-bg min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md">
         <!-- Container utama -->
@@ -112,12 +130,12 @@
                     </div>
 
                     <div class="mt-4 flex justify-center">
-                        <button
+                        <a href="{{ url_for('login_google') }}"
                             class="flex items-center justify-center px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                         >
                             <i class="fab fa-google text-red-500 mr-2"></i>
                             <span class="text-sm font-medium text-gray-700">Lanjutkan dengan Google</span>
-                        </button>
+                        </a>
                     </div>
                 </div>
 
