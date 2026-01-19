@@ -188,7 +188,7 @@ def google_auth():
 
     except Exception as e:
         db.session.rollback()
-        # Print detail error ke terminal agar kita tahu penyebab pastinya
+        # Print detail error ke terminal agar tahu penyebab pastinya
         import traceback
         traceback.print_exc() 
         print(f"Error Detail: {str(e)}")
@@ -289,8 +289,6 @@ def admin_dashboard():
     if not current_user.is_admin():
         flash('Akses ditolak! Halaman ini hanya untuk admin.', 'error')
         return redirect(url_for('dashboard'))
-    
-    users = db.session.query(User).all()
     return render_template('admin_dashboard.html', users=users, total_admins=total_admins, total_users=total_users, total_products=total_products, orders=orders)
 
 from sqlalchemy import func
@@ -298,6 +296,14 @@ from sqlalchemy import func
 @app.route('/admin/products', methods=['GET', 'POST'])
 @login_required
 def admin_products():
+    users = db.session.query(User).all()
+    total_admins = len([user for user in users if user.is_admin()])
+    total_users = len(users) - total_admins
+    total_products = db.session.query(Product).count()
+    orders = db.session.query(Order).options(
+        joinedload(Order.product_orders).joinedload(ProductOrder.product),
+        joinedload(Order.user)
+    ).order_by(Order.created_at.desc()).all()
     if not current_user.is_admin():
         flash('Akses ditolak! Halaman ini hanya untuk admin.', 'error')
         return redirect(url_for('dashboard'))
@@ -412,6 +418,8 @@ def admin_products():
         can_delete = True
         
         return render_template('admin_produk.html',
+                               total_users=total_users,
+                               orders=orders,
                              total_products=total_products,
                              active_products=active_products,
                              low_stock=low_stock,
@@ -611,9 +619,6 @@ def admin_edit_product():
                          product=product, 
                          product_status_value=product_status_value)
 
-from flask import jsonify, request
-from datetime import datetime
-
 @app.route('/admin/update-product/<int:product_id>', methods=['POST'])
 @login_required
 def admin_update_product(product_id):
@@ -674,6 +679,14 @@ def admin_update_product(product_id):
 @app.route('/admin/orders', methods=['GET', 'POST'])
 @login_required
 def admin_orders():
+    users = db.session.query(User).all()
+    total_admins = len([user for user in users if user.is_admin()])
+    total_users = len(users) - total_admins
+    total_products = db.session.query(Product).count()
+    orders = db.session.query(Order).options(
+        joinedload(Order.product_orders).joinedload(ProductOrder.product),
+        joinedload(Order.user)
+    ).order_by(Order.created_at.desc()).all()
     if not current_user.is_admin():
         flash('Akses ditolak! Halaman ini hanya untuk admin.', 'error')
         return redirect(url_for('dashboard'))
@@ -768,6 +781,8 @@ def admin_orders():
     cancel = sum(1 for order in orders if order.status == OrderStatusEnum.CANCEL)
     
     return render_template('admin_order.html', 
+                           total_users=total_users,
+                           total_products=total_products,
                          orders=orders, 
                          pending=pending, 
                          approved=approved, 
@@ -776,6 +791,14 @@ def admin_orders():
 @app.route('/admin/users', methods=['GET', 'POST'])
 @login_required
 def admin_users():
+    users = db.session.query(User).all()
+    total_admins = len([user for user in users if user.is_admin()])
+    total_users = len(users) - total_admins
+    total_products = db.session.query(Product).count()
+    orders = db.session.query(Order).options(
+        joinedload(Order.product_orders).joinedload(ProductOrder.product),
+        joinedload(Order.user)
+    ).order_by(Order.created_at.desc()).all()
     if not current_user.is_admin():
         flash('Akses ditolak! Halaman ini hanya untuk admin.', 'error')
         return redirect(url_for('dashboard'))
@@ -830,6 +853,8 @@ def admin_users():
                          users=users_all, 
                          total_admins=total_admins, 
                          total_users=total_users,
+                         orders=orders,
+                         total_products=total_products,
                          can_update=True)
 
 @app.route('/admin/add-user', methods=['GET', 'POST'])
@@ -1085,10 +1110,6 @@ def form_order_user():
 
     return render_template('form_order_user.html', user_data=user_data, cart_items=cart_items, product_now=product_now)
 
-from datetime import datetime
-from flask import jsonify, request, session
-from flask_login import login_required, current_user
-# Pastikan snap sudah diinisialisasi di luar fungsi
 
 @app.route('/api/order/process', methods=['POST'])
 @login_required
@@ -1243,6 +1264,20 @@ def order_user():
             po.product.image_url = get_image_data(po.product)
         
     return render_template('order-user.html', orders=orders)
+
+@app.route('/order/detail/<int:order_id>')
+@login_required
+def order_detail(order_id):
+    # Ambil data order, pastikan order tersebut milik user yang sedang login
+    order = db.session.query(Order).options(
+        joinedload(Order.product_orders).joinedload(ProductOrder.product).joinedload(Product.images)
+    ).filter_by(id=order_id).first()
+    
+    if order.user_id != current_user.id:
+        flash("Anda tidak memiliki akses ke pesanan ini.", "danger")
+        return redirect(url_for('orders'))
+        
+    return render_template('detail-order-user.html', order=order)
 
 
 

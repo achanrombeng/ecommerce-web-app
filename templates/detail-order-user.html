@@ -1,0 +1,89 @@
+{% extends "base.html" %} 
+{% block title %}Detail Order #{{ order.id }} - LinkedCommerce{% endblock %} 
+
+{% block content %}
+<main class="max-w-4xl mx-auto space-y-6" data-aos="fade-up">
+    <div class="flex items-center justify-between mb-2">
+        <button onclick="window.history.back()" class="text-linkedin-blue hover:text-linkedin-dark flex items-center font-bold text-sm">
+            <i class="fas fa-arrow-left mr-2"></i> Kembali ke Riwayat
+        </button>
+        <span class="bg-blue-50 text-linkedin-blue px-4 py-1.5 rounded-full text-[10px] font-bold border border-blue-100 uppercase tracking-widest">
+            {{ order.status.value if order.status.value else (order.status if order.status else 'PENDING') }}
+        </span>
+    </div>
+
+    <section class="bg-white rounded-lg shadow border border-gray-200 p-6">
+        <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 border-b border-gray-100 pb-6 mb-6">
+            <div>
+                <h3 class="text-xl font-bold text-gray-800 tracking-tight">Detail Pesanan #{{ order.id }}</h3>
+                <p class="text-sm text-gray-500">Dipesan pada {{ order.created_at.strftime('%d %B %Y, %H:%M') }}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total Transaksi</p>
+                <p class="text-2xl font-bold text-linkedin-blue">Rp {{ "{:,.0f}".format(order.amount | default(0) | float).replace(',', '.') }}</p>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <h4 class="font-bold text-gray-800 border-l-4 border-linkedin-blue pl-3 mb-4">Produk yang Dibeli</h4>
+            {% for po in order.product_orders %}
+            <div class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                <div class="w-20 h-20 flex-shrink-0 bg-linkedin-background rounded-md border border-gray-100 overflow-hidden">
+                    {% if po.product.image_url %}
+                        <img src="{{ po.product.image_url }}" alt="Product" class="w-full h-full object-cover" />
+                    {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-gray-300">
+                            <i class="fas fa-image text-2xl"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="flex-1">
+                    <h5 class="font-bold text-gray-900 leading-tight">{{ po.product.product_name }}</h5>
+                    <p class="text-sm text-gray-500 mt-1">
+                        {{ po.quantity }} x <span class="text-linkedin-blue font-semibold">Rp {{ "{:,.0f}".format(po.product.product_price | default(0) | float).replace(',', '.') }}</span>
+                    </p>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-gray-800">
+                        Rp {{ "{:,.0f}".format((po.quantity | default(1)) * (po.product.product_price | default(0)) | float).replace(',', '.') }}
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <h4 class="font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-map-marker-alt text-linkedin-blue mr-2"></i> Alamat Pengiriman
+            </h4>
+            <div class="text-sm text-gray-600 space-y-1">
+                <p class="font-bold text-gray-800">{{ current_user.username }}</p>
+                <p>{{ current_user.email }}</p>
+                <p class="italic text-gray-400 mt-2">Alamat pengiriman sesuai dengan profil pengguna.</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6">
+            <h4 class="font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-receipt text-linkedin-blue mr-2"></i> Rincian Pembayaran
+            </h4>
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Total Harga ({{ order.product_orders|length }} Barang)</span>
+                    <span class="text-gray-800">Rp {{ "{:,.0f}".format(order.amount | default(0) | float).replace(',', '.') }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Biaya Pengiriman</span>
+                    <span class="text-green-600 font-medium">Gratis</span>
+                </div>
+                <div class="border-t border-gray-100 pt-3 flex justify-between items-center">
+                    <span class="font-bold text-gray-800">Total Bayar</span>
+                    <span class="font-bold text-xl text-linkedin-blue">Rp {{ "{:,.0f}".format(order.amount | default(0) | float).replace(',', '.') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
