@@ -7,7 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-from models import GenderEnum, Image, Order, OrderStatusEnum, PaymentMethodEnum, Product, ProductOrder, RoleEnum, User, db, Cart
+from models import GenderEnum, Image, ImageUsers, Order, OrderStatusEnum, PaymentMethodEnum, Product, ProductOrder, RoleEnum, User, db, Cart
 import os
 import base64
 import uuid
@@ -204,6 +204,13 @@ def google_auth():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    user = db.session.query(User).options(joinedload(User.image_profile)).filter_by(id=current_user.id).first()
+    user.profile_image_url = None
+    if user.image_profile:
+        img = user.image_profile[0]
+        if img.file_data:
+            base64_data = base64.b64encode(img.file_data).decode('utf-8')
+            user.profile_image_url = f"data:{img.file_type};base64,{base64_data}"
     if current_user.is_admin():
         return redirect(url_for('admin_dashboard'))
     
@@ -269,7 +276,7 @@ def dashboard():
         pending = approve = cancel = 0
 
     return render_template('dashboard.html', 
-                         user=current_user, 
+                         user=user, 
                          products=processed_products, 
                          orders=orders, 
                          pending=pending, 
@@ -291,146 +298,98 @@ def admin_dashboard():
         return redirect(url_for('dashboard'))
     return render_template('admin_dashboard.html', users=users, total_admins=total_admins, total_users=total_users, total_products=total_products, orders=orders)
 
-from sqlalchemy import func
-
 @app.route('/admin/products', methods=['GET', 'POST'])
 @login_required
 def admin_products():
     users = db.session.query(User).all()
+    total_products = db.session.query(Product).count()
     total_admins = len([user for user in users if user.is_admin()])
     total_users = len(users) - total_admins
-    total_products = db.session.query(Product).count()
     orders = db.session.query(Order).options(
         joinedload(Order.product_orders).joinedload(ProductOrder.product),
         joinedload(Order.user)
     ).order_by(Order.created_at.desc()).all()
     if not current_user.is_admin():
-        flash('Akses ditolak! Halaman ini hanya untuk admin.', 'error')
+        flash('Akses ditolak!', 'error')
         return redirect(url_for('dashboard'))
-    
+
     if request.method == 'POST':
         try:
-            # Ambil parameter filter dari request
+            # Ambil filter dari request.form
             name_filter = request.form.get('name', '').strip()
             category_filter = request.form.get('category', '').strip()
             max_price_filter = request.form.get('maxPrice', '').strip()
             status_filter = request.form.get('status', '').strip()
-            
-            # Query database dengan filter
-            query = db.session.query(Product)
-            
-            # Apply filters
+
+            # Query dengan joinedload 'images' sesuai model Product Anda
+            query = db.session.query(Product).options(joinedload(Product.images))
+
             if name_filter:
                 query = query.filter(func.lower(Product.product_name).like(f'%{name_filter.lower()}%'))
-            
             if category_filter:
-                query = query.filter(func.lower(Product.product_category).like(f'%{category_filter.lower()}%'))
-            
+                query = query.filter(Product.product_category == category_filter)
             if max_price_filter:
                 try:
-                    max_price = float(max_price_filter)
-                    # Konversi product_price ke float untuk filter
-                    query = query.filter(func.cast(Product.product_price, Float) <= max_price)
-                except ValueError:
-                    pass  # Ignore invalid price filter
+                    query = query.filter(Product.product_price <= float(max_price_filter))
+                except ValueError: pass
             
-            # Filter status
             if status_filter:
                 if status_filter.lower() == 'aktif':
                     query = query.filter(Product.product_status == True)
                 elif status_filter.lower() == 'nonaktif':
                     query = query.filter(Product.product_status == False)
-            
-            # Get results
+
             products = query.order_by(Product.id.desc()).all()
             
-            # Format data untuk DataTables
             data = []
-            for product in products:
-                # Konversi status Boolean ke display string
-                if product.product_status == True:
-                    display_status = 'Available'
-                elif product.product_status == False:
-                    display_status = 'Unavailable'
-                else:
-                    display_status = 'Unknown'
-                
-                # Override jika stok habis
-                if product.product_stock == 0:
-                    display_status = 'Out Of Stock'
-                
-                # Format harga - pastikan product_price berupa string yang valid
+            for p in products:
+                # --- LOGIKA GAMBAR ---
+                img_base64 = None
+                if p.images and len(p.images) > 0:
+                    first_img = p.images[0]
+                    if first_img.file_data:
+                        try:
+                            b64 = base64.b64encode(first_img.file_data).decode('utf-8')
+                            img_base64 = f"data:{first_img.file_type};base64,{b64}"
+                        except: img_base64 = None
+
+                # Pastikan harga dikonversi ke float sebelum diformat
                 try:
-                    # Jika product_price sudah string angka, konversi ke int/float dulu
-                    if isinstance(product.product_price, str):
-                        # Hapus karakter non-numerik jika ada
-                        price_str = ''.join(c for c in product.product_price if c.isdigit() or c == '.')
-                        if price_str:
-                            price_value = float(price_str)
-                        else:
-                            price_value = 0
-                    else:
-                        price_value = float(product.product_price)
-                    
-                    price_formatted = f"{price_value:,.0f}"
+                    raw_price = float(p.product_price) if p.product_price else 0
+                    price_formatted = f"{raw_price:,.0f}"
                 except (ValueError, TypeError):
                     price_formatted = "0"
-                
-                product_data = {
-                    'product_id': product.id,
-                    'product_name': product.product_name,
-                    'product_category': product.product_category or 'Tidak ada kategori',
+
+                # --- LOGIKA STATUS ---
+                display_status = 'Available' if p.product_status else 'Unavailable'
+                if (p.product_stock or 0) <= 0:
+                    display_status = 'Out Of Stock'
+
+                data.append({
+                    'product_id': p.id,
+                    'product_name': p.product_name,
+                    'product_category': p.product_category or 'Tanpa Kategori',
                     'product_price': price_formatted,
-                    'product_stock': product.product_stock,
-                    'product_status': display_status
-                }
-                data.append(product_data)
-            
+                    'product_stock': p.product_stock or 0,
+                    'product_status': display_status,
+                    'product_image': img_base64
+                })
+
             return jsonify({'data': data})
-            
+
         except Exception as e:
-            app.logger.error(f"Error in POST request: {str(e)}")
+            print(f"DEBUG ERROR: {str(e)}")
             return jsonify({'data': [], 'error': str(e)}), 500
+
+    # GET Request: Ambil statistik untuk tampilan awal
+    stats = {
+        'total': db.session.query(Product).count(),
+        'active': db.session.query(Product).filter(Product.product_status == True).count(),
+        'low': db.session.query(Product).filter(Product.product_stock < 10, Product.product_stock > 0).count(),
+        'out': db.session.query(Product).filter(Product.product_stock <= 0).count()
+    }
     
-    # GET request - tampilkan halaman
-    try:
-        # Hitung statistik
-        total_products = db.session.query(Product).count()
-        
-        # Produk aktif
-        active_products = db.session.query(Product).filter(
-            Product.product_status == True
-        ).count()
-        
-        # Stok menipis
-        low_stock = db.session.query(Product).filter(
-            Product.product_stock < 10,
-            Product.product_stock > 0
-        ).count()
-        
-        # Habis stok
-        out_of_stock = db.session.query(Product).filter(
-            Product.product_stock == 0
-        ).count()
-        
-        # Permission check
-        can_update = True
-        can_delete = True
-        
-        return render_template('admin_produk.html',
-                               total_users=total_users,
-                               orders=orders,
-                             total_products=total_products,
-                             active_products=active_products,
-                             low_stock=low_stock,
-                             out_of_stock=out_of_stock,
-                             can_update=can_update,
-                             can_delete=can_delete)
-                             
-    except Exception as e:
-        app.logger.error(f"Error in GET request: {str(e)}")
-        flash(f'Terjadi kesalahan: {str(e)}', 'error')
-        return redirect(url_for('dashboard'))
+    return render_template('admin_produk.html', **stats, can_update=True, can_delete=True, user=users, total_products=total_products, orders=orders, total_admins=total_admins, total_users=total_users)
 @app.route('/admin/products/delete/<int:product_id>', methods=['DELETE'])
 @login_required
 def admin_delete_product(product_id):
@@ -493,6 +452,14 @@ def admin_delete_product(product_id):
 @app.route('/admin/add-product', methods=['GET', 'POST'])
 @login_required
 def admin_add_product():
+    users = db.session.query(User).all()
+    total_admins = len([user for user in users if user.is_admin()])
+    total_users = len(users) - total_admins
+    total_products = db.session.query(Product).count()
+    orders = db.session.query(Order).options(
+        joinedload(Order.product_orders).joinedload(ProductOrder.product),
+        joinedload(Order.user)
+    ).order_by(Order.created_at.desc()).all()
     if request.method == 'POST':
         try:
             # Ambil data dari form
@@ -527,7 +494,6 @@ def admin_add_product():
                 product_price=product_price,
                 product_stock=product_stock,
                 product_status=product_status_bool,
-                
                 created_at=datetime.now()
             )
 
@@ -600,7 +566,7 @@ def admin_add_product():
             traceback.print_exc()
             flash('Error menambahkan produk: ' + str(e), 'error')
     
-    return render_template('admin_add_produk.html') 
+    return render_template('admin_add_produk.html', users=users, total_admins=total_admins, total_users=total_users, total_products=total_products, orders=orders) 
 
 @app.route('/admin/edit-product')
 @login_required
@@ -791,28 +757,34 @@ def admin_orders():
 @app.route('/admin/users', methods=['GET', 'POST'])
 @login_required
 def admin_users():
-    users = db.session.query(User).all()
-    total_admins = len([user for user in users if user.is_admin()])
-    total_users = len(users) - total_admins
-    total_products = db.session.query(Product).count()
-    orders = db.session.query(Order).options(
-        joinedload(Order.product_orders).joinedload(ProductOrder.product),
-        joinedload(Order.user)
-    ).order_by(Order.created_at.desc()).all()
     if not current_user.is_admin():
         flash('Akses ditolak! Halaman ini hanya untuk admin.', 'error')
         return redirect(url_for('dashboard'))
+
+    # 1. Ambil data Admin yang sedang login (untuk sidebar base-admin.html)
+    # Kita ambil objek admin secara terpisah agar profile_image_url bisa ditempelkan
+    admin_obj = db.session.query(User).options(joinedload(User.image_profile)).filter_by(id=current_user.id).first()
     
+    admin_profile_url = None
+    if admin_obj and admin_obj.image_profile:
+        img = admin_obj.image_profile[0]
+        if img.file_data:
+            base64_admin = base64.b64encode(img.file_data).decode('utf-8')
+            admin_profile_url = f"data:{img.file_type};base64,{base64_admin}"
+    
+    # Simpan ke current_user agar bisa diakses oleh sidebar di template manapun
+    current_user.profile_image_url = admin_profile_url
+
+    # 2. LOGIKA POST (Request dari DataTables AJAX)
     if request.method == 'POST':
-        # Ambil filter dari request AJAX
         name_filter = request.form.get('name', '').strip()
         email_filter = request.form.get('email', '').strip()
         role_filter = request.form.get('role', '').strip()
         gender_filter = request.form.get('gender', '').strip()
         
-        query = db.session.query(User)
+        # Query User dengan eager load gambar
+        query = db.session.query(User).options(joinedload(User.image_profile))
         
-        # Logika Filtering
         if name_filter:
             query = query.filter(User.first_name.ilike(f'%{name_filter}%'))
         if email_filter:
@@ -822,44 +794,63 @@ def admin_users():
         if gender_filter:
             query = query.filter(User.gender == gender_filter.upper())
         
-        users = query.all()
+        filtered_users = query.all()
         
-        # Format data untuk DataTables
-        data = []
-        for user in users:
-            # Mengambil URL profil atau None
-            # Pastikan field 'profile_picture' ada di Model User 
-            p_pic = getattr(user, 'profile_picture', None)
-            
-            data.append({
-                'id': user.id,
-                'first_name': user.first_name,
-                'last_name': user.last_name or '',
-                'email': user.email,
-                'role': user.role.value if hasattr(user.role, 'value') else str(user.role),
-                'gender': user.gender.value if hasattr(user.gender, 'value') else str(user.gender),
-                'birth_date': user.birth_date.strftime("%d %B %Y") if user.birth_date else '-',
-                'profile_picture': p_pic
+        data_list = []
+        for u in filtered_users:
+            # Konversi gambar tiap user di tabel
+            u_pic = None
+            if u.image_profile:
+                img_u = u.image_profile[0]
+                if img_u.file_data:
+                    try:
+                        b64_u = base64.b64encode(img_u.file_data).decode('utf-8')
+                        u_pic = f"data:{img_u.file_type};base64,{b64_u}"
+                    except:
+                        u_pic = None
+
+            data_list.append({
+                'id': u.id,
+                'first_name': u.first_name,
+                'last_name': u.last_name or '',
+                'email': u.email,
+                'role': u.role.value if hasattr(u.role, 'value') else str(u.role),
+                'gender': u.gender.value if hasattr(u.gender, 'value') else str(u.gender),
+                'birth_date': u.birth_date.strftime("%d %B %Y") if u.birth_date else '-',
+                'profile_picture': u_pic
             })
         
-        return jsonify({'data': data})
+        return jsonify({'data': data_list})
     
-    # Untuk GET request awal
+    # 3. LOGIKA GET (Render Halaman Pertama Kali)
     users_all = db.session.query(User).all()
     total_admins = len([u for u in users_all if u.role == 'ADMIN' or (hasattr(u.role, 'value') and u.role.value == 'ADMIN')])
     total_users = len(users_all) - total_admins
+    total_products = db.session.query(Product).count()
+    orders = db.session.query(Order).options(
+        joinedload(Order.product_orders).joinedload(ProductOrder.product),
+        joinedload(Order.user)
+    ).order_by(Order.created_at.desc()).all()
     
     return render_template('admin_user.html', 
                          users=users_all, 
                          total_admins=total_admins, 
                          total_users=total_users,
-                         orders=orders,
                          total_products=total_products,
+                         orders=orders,
                          can_update=True)
 
 @app.route('/admin/add-user', methods=['GET', 'POST'])
 @login_required
 def admin_add_user():
+    users = db.session.query(User).all()
+    total_admins = len([user for user in users if user.is_admin()])
+    total_users = len(users) - total_admins
+    total_products = db.session.query(Product).count()
+    orders = db.session.query(Order).options(
+        joinedload(Order.product_orders).joinedload(ProductOrder.product),
+        joinedload(Order.user)
+    ).order_by(Order.created_at.desc()).all()
     if request.method == 'POST':
         try:
             first_name = request.form.get('first_name')
@@ -926,13 +917,21 @@ def admin_add_user():
             }), 500
     
     # GET request - tampilkan form
-    return render_template('admin_add_user.html')
+    return render_template('admin_add_user.html', users=users, total_admins=total_admins, total_users=total_users, total_products=total_products, orders=orders)
 
 @app.route('/admin/edit-user')
 @login_required
 def admin_edit_user():
     user = db.session.query(User).filter_by(id=request.args.get('user_id')).first()
-    return render_template('admin_edit_user.html', user=user)
+    users = db.session.query(User).all()
+    total_admins = len([user for user in users if user.is_admin()])
+    total_users = len(users) - total_admins
+    total_products = db.session.query(Product).count()
+    orders = db.session.query(Order).options(
+        joinedload(Order.product_orders).joinedload(ProductOrder.product),
+        joinedload(Order.user)
+    ).order_by(Order.created_at.desc()).all()
+    return render_template('admin_edit_user.html', user=user, users=users, total_admins=total_admins, total_users=total_users, total_products=total_products, orders=orders)
 
 
 @app.route('/admin/update-user/<int:user_id>', methods=['POST'])
@@ -1031,6 +1030,13 @@ import base64
 @app.route('/produk-user')
 @login_required
 def produk_user():
+    user = db.session.query(User).options(joinedload(User.image_profile)).filter_by(id=current_user.id).first()
+    user.profile_image_url = None
+    if user.image_profile:
+        img = user.image_profile[0]
+        if img.file_data:
+            base64_data = base64.b64encode(img.file_data).decode('utf-8')
+            user.profile_image_url = f"data:{img.file_type};base64,{base64_data}"
     try:
         products = db.session.query(Product).options(joinedload(Product.images)).all()
         
@@ -1062,7 +1068,7 @@ def produk_user():
             
             processed_products.append(product_data)
         
-        return render_template('produk-user.html', products=processed_products)
+        return render_template('produk-user.html', products=processed_products, user=user)
         
     except Exception as e:
         print(f"Error loading products: {e}")
@@ -1092,10 +1098,16 @@ def detect_mime_type(image_bytes):
 @app.route('/form-order-user', methods=['GET'])
 @login_required
 def form_order_user():
+    user = db.session.query(User).options(joinedload(User.image_profile)).filter_by(id=current_user.id).first()
     user_data = current_user
     cart_ids = session.get('checkout_cart_ids', [])
     cart_items = []
-    
+    user.profile_image_url = None
+    if user.image_profile:
+        img = user.image_profile[0]
+        if img.file_data:
+            base64_data = base64.b64encode(img.file_data).decode('utf-8')
+            user.profile_image_url = f"data:{img.file_type};base64,{base64_data}"
     if cart_ids:
         cart_items = db.session.query(Cart).filter(Cart.id.in_(cart_ids), Cart.user_id == current_user.id).all()
         for item in cart_items:
@@ -1108,7 +1120,7 @@ def form_order_user():
         if product_now:
             product_now.product_price = float(product_now.product_price or 0)
 
-    return render_template('form_order_user.html', user_data=user_data, cart_items=cart_items, product_now=product_now)
+    return render_template('form_order_user.html', user_data=user_data, cart_items=cart_items, product_now=product_now, user=user)
 
 
 @app.route('/api/order/process', methods=['POST'])
@@ -1237,6 +1249,13 @@ def process_order():
 @app.route('/order-user')
 @login_required
 def order_user():
+    user = db.session.query(User).options(joinedload(User.image_profile)).filter_by(id=current_user.id).first()
+    user.profile_image_url = None
+    if user.image_profile:
+        img = user.image_profile[0]
+        if img.file_data:
+            base64_data = base64.b64encode(img.file_data).decode('utf-8')
+            user.profile_image_url = f"data:{img.file_type};base64,{base64_data}"
     # Ambil data order dengan relasi produk dan gambarnya
     orders = db.session.query(Order).options(
         joinedload(Order.product_orders).joinedload(ProductOrder.product).joinedload(Product.images)
@@ -1263,27 +1282,54 @@ def order_user():
         for po in order.product_orders:
             po.product.image_url = get_image_data(po.product)
         
-    return render_template('order-user.html', orders=orders)
+    return render_template('order-user.html', orders=orders, user=user)
 
 @app.route('/order/detail/<int:order_id>')
 @login_required
 def order_detail(order_id):
+    user = db.session.query(User).options(joinedload(User.image_profile)).filter_by(id=current_user.id).first()
     # Ambil data order, pastikan order tersebut milik user yang sedang login
     order = db.session.query(Order).options(
         joinedload(Order.product_orders).joinedload(ProductOrder.product).joinedload(Product.images)
     ).filter_by(id=order_id).first()
     
+    def get_image_data(product):
+        if product.images and len(product.images) > 0:
+            img = product.images[0]
+            if img.file_data:
+                try:
+                    if isinstance(img.file_data, str) and img.file_data.startswith('data:'):
+                        return img.file_data
+                    image_bytes = bytes(img.file_data)
+                    mime_type = detect_mime_type(image_bytes)
+                    base64_image = base64.b64encode(image_bytes).decode('utf-8')
+                    return f'data:{mime_type};base64,{base64_image}'
+                except Exception as e:
+                    print(f"Error: {e}")
+        return None
+
+    # Tambahkan atribut image_url ke setiap produk di dalam order secara dinamis
+    for po in order.product_orders:
+        po.product.image_url = get_image_data(po.product)
+
     if order.user_id != current_user.id:
         flash("Anda tidak memiliki akses ke pesanan ini.", "danger")
         return redirect(url_for('orders'))
         
-    return render_template('detail-order-user.html', order=order)
+    return render_template('detail-order-user.html', order=order, user=user)
 
 
 
 @app.route('/cart')
 @login_required
 def cart_user():
+    user = db.session.query(User).options(joinedload(User.image_profile)).filter_by(id=current_user.id).first()
+    user.profile_image_url = None
+    if user.image_profile:
+        img = user.image_profile[0]
+        if img.file_data:
+            base64_data = base64.b64encode(img.file_data).decode('utf-8')
+            user.profile_image_url = f"data:{img.file_type};base64,{base64_data}"
     # Ambil items dengan relasi produk dan gambarnya
     cart_items = db.session.query(Cart).options(
         joinedload(Cart.product).joinedload(Product.images)
@@ -1312,7 +1358,7 @@ def cart_user():
 
     subtotal = sum(float(item.product.product_price or 0) * int(item.quantity or 0) for item in cart_items)
     
-    return render_template('cart-user.html', cart_items=cart_items, subtotal=subtotal, total=subtotal)
+    return render_template('cart-user.html', cart_items=cart_items, subtotal=subtotal, total=subtotal, user=user)
 
 @app.route('/add-to-cart/<int:product_id>', methods=['POST'])
 @login_required
@@ -1425,58 +1471,86 @@ def update_cart_qty(product_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
-@app.route('/profile-user' , methods=['GET'])
+@app.route('/profile-user', methods=['GET'])
 def profile_user():
-    return render_template('profile-user.html')
+    # Ambil satu user berdasarkan ID (bukan list)
+    users = db.session.query(User).options(joinedload(User.image_profile)).filter_by(id=current_user.id).first()
+    
+    # Fungsi untuk mengolah data biner dari tabel ImageUsers
+    def get_profile_image_url(user):
+        if user.image_profile and len(user.image_profile) > 0:
+            # Mengambil item pertama karena relasi image_profile adalah list
+            img = user.image_profile[0]
+            if img.file_data:
+                try:
+                    # Konversi LargeBinary ke base64 string
+                    base64_data = base64.b64encode(img.file_data).decode('utf-8')
+                    # Gunakan file_type dari database (misal: image/jpeg)
+                    return f"data:{img.file_type};base64,{base64_data}"
+                except Exception as e:
+                    print(f"Error processing image: {e}")
+        return None
 
-from flask import jsonify # Pastikan jsonify diimport
+    # Tempelkan hasil URL ke atribut dinamis agar mudah dipanggil di HTML
+    users.profile_image_url = get_profile_image_url(users)
+    
+    return render_template('profile-user.html', user=users)
+
 
 @app.route('/edit-profile-user/<int:user_id>', methods=['POST'])
 @login_required
 def edit_profile_user(user_id):
-    # Pastikan hanya user yang bersangkutan yang bisa edit profilenya sendiri
     if current_user.id != user_id:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
 
     try:
-        # Ambil data dari form
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        phone_number = request.form.get('phone_number')
+        # --- 1. Update Data Teks ---
+        current_user.first_name = request.form.get('first_name')
+        current_user.last_name = request.form.get('last_name')
+        current_user.phone_number = request.form.get('phone_number')
+        current_user.address = request.form.get('address')
+        current_user.gender = request.form.get('gender')
+        
         birth_date = request.form.get('birth_date')
-        gender = request.form.get('gender')
-        address = request.form.get('address')
-        
-        # Update data user
-        current_user.first_name = first_name
-        current_user.last_name = last_name
-        current_user.phone_number = phone_number
-        current_user.address = address
-        current_user.gender = gender # Pastikan kolom gender di DB menerima string 'MALE'/'FEMALE'
-        
-        # Handle birth date conversion
         if birth_date:
-            try:
-                current_user.birth_date = datetime.strptime(birth_date, '%Y-%m-%d').date()
-            except ValueError:
-                return jsonify({'success': False, 'message': 'Format tanggal lahir tidak valid'}), 400
+            current_user.birth_date = datetime.strptime(birth_date, '%Y-%m-%d')
 
-        # Commit perubahan ke database
+        # --- 2. Update/Upload Foto Profil ---
+        if 'profile_photo' in request.files:
+            file = request.files['profile_photo']
+            if file and file.filename != '':
+                # Baca data file
+                file_data = file.read()
+                file_name = file.filename
+                file_type = file.content_type  # misal: image/jpeg
+                file_size = len(file_data)
+
+                # Cari apakah user sudah punya foto sebelumnya
+                existing_img = db.session.query(ImageUsers).filter_by(user_id=user_id).first()
+
+                if existing_img:
+                    # Update foto lama
+                    existing_img.file_data = file_data
+                    existing_img.file_name = file_name
+                    existing_img.file_type = file_type
+                    existing_img.file_size = file_size
+                else:
+                    # Buat record foto baru
+                    new_img = ImageUsers(
+                        user_id=user_id,
+                        file_data=file_data,
+                        file_name=file_name,
+                        file_type=file_type,
+                        file_size=file_size
+                    )
+                    db.session.add(new_img)
+
         db.session.commit()
-
-        # Karena menggunakan fetch/AJAX, kita kirim respons JSON
-        return jsonify({
-            'success': True,
-            'message': 'Profil berhasil diperbarui!'
-        }), 200
+        return jsonify({'success': True, 'message': 'Profil dan foto berhasil diperbarui!'}), 200
             
     except Exception as e:
         db.session.rollback()
-        print(f"Error updating profile: {e}")
-        return jsonify({
-            'success': False, 
-            'message': f'Gagal memperbarui profil: {str(e)}'
-        }), 500
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
         
 
 

@@ -1,23 +1,34 @@
-{% extends "base-admin.html" %} 
-{% block title %}Kelola Pengguna - LinkedCommerce{% endblock %} 
-{% block page_title %}Kelola Pengguna{% endblock %}
-{% block page_icon %}users{% endblock %} 
-{% block breadcrumb %}
+{% extends "base-admin.html" %} {% block title %}Kelola Pengguna -
+LinkedCommerce{% endblock %} {% block page_title %}Kelola Pengguna{% endblock %}
+{% block page_icon %}users{% endblock %} {% block breadcrumb %}
+
 <li>
   <div class="flex items-center">
     <i class="fas fa-chevron-right text-gray-400 mx-2"></i>
+
     <span class="text-sm font-medium text-gray-500">Pengguna</span>
   </div>
 </li>
-{% endblock %} 
 
-{% block content %}
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+{% endblock %} {% block content %}
 
+<link
+  rel="stylesheet"
+  href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+/>
 <div class="space-y-6">
-  <div class="flex flex-col md:flex-row justify-start items-start md:items-center gap-4" data-aos="fade-up">
+  <div
+    class="flex flex-col md:flex-row justify-start items-start md:items-center gap-4"
+    data-aos="fade-up"
+  >
     <div>
       <h2 class="text-xl font-semibold text-gray-800">Manajemen Pengguna</h2>
       <p class="text-sm text-gray-600 mt-1">
@@ -25,37 +36,53 @@
       </p>
     </div>
   </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6" data-aos="fade-up" data-aos-delay="100">
-    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-linkedin-blue">
+  <div
+    class="grid grid-cols-1 md:grid-cols-4 gap-6"
+    data-aos="fade-up"
+    data-aos-delay="100"
+  >
+    <div
+      class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-linkedin-blue"
+    >
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-600">Total Pengguna</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="totalUsers">{{ users|length }}</h3>
+
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="totalUsers">
+            {{ users|length }}
+          </h3>
         </div>
+
         <div class="bg-linkedin-background p-3 rounded-full">
           <i class="fas fa-users text-linkedin-blue text-xl"></i>
         </div>
       </div>
     </div>
-
-    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+    <div
+      class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-green-500"
+    >
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-600">User</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="activeUsers">{{ total_users }}</h3>
+
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="activeUsers">
+            {{ total_users }}
+          </h3>
         </div>
         <div class="bg-green-50 p-3 rounded-full">
           <i class="fas fa-user-check text-green-500 text-xl"></i>
         </div>
       </div>
     </div>
-
-    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+    <div
+      class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-purple-500"
+    >
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-600">Admin</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="adminUsers">{{ total_admins }}</h3>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="adminUsers">
+            {{ total_admins }}
+          </h3>
         </div>
         <div class="bg-purple-50 p-3 rounded-full">
           <i class="fas fa-shield-alt text-purple-500 text-xl"></i>
@@ -63,43 +90,67 @@
       </div>
     </div>
   </div>
-
-  <div class="bg-white rounded-lg shadow" data-aos="fade-up" data-aos-delay="200">
+  <div
+    class="bg-white rounded-lg shadow"
+    data-aos="fade-up"
+    data-aos-delay="200"
+  >
     <div class="p-6">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
           <i class="fas fa-list"></i> Daftar Pengguna
         </h2>
         <div class="gap-4 flex">
-          <a href="{{ url_for('admin_add_user') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition duration-200">
+          <a
+            href="{{ url_for('admin_add_user') }}"
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition duration-200"
+          >
             <i class="fas fa-user-plus mr-2"></i>Tambah Pengguna
           </a>
-          <button onclick="reloadTable()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition">
+          <button
+            onclick="reloadTable()"
+            class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition"
+          >
             <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
           </button>
         </div>
       </div>
-
       <div class="overflow-x-auto">
         <table id="usersTable" class="w-full">
           <thead class="bg-gray-100 border-b border-gray-300">
             <tr class="bg-gray-50">
               <th class="px-4 py-3"></th>
               <th class="px-4 py-3">
-                <input type="text" id="filterName" placeholder="Filter Nama" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue" />
+                <input
+                  type="text"
+                  id="filterName"
+                  placeholder="Filter Nama"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                />
               </th>
               <th class="px-4 py-3">
-                <input type="text" id="filterEmail" placeholder="Filter Email" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue" />
+                <input
+                  type="text"
+                  id="filterEmail"
+                  placeholder="Filter Email"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                />
               </th>
               <th class="px-4 py-3">
-                <select id="filterRole" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue">
+                <select
+                  id="filterRole"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                >
                   <option value="">Semua Role</option>
                   <option value="admin">Admin</option>
                   <option value="user">User</option>
                 </select>
               </th>
               <th class="px-4 py-3">
-                <select id="filterGender" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue">
+                <select
+                  id="filterGender"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
+                >
                   <option value="">Semua Gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
@@ -108,17 +159,47 @@
               <th class="px-4 py-3"></th>
               <th class="px-4 py-3"></th>
             </tr>
-
             <tr>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">No</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Nama</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Role</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Gender</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tanggal Lahir</th>
-              <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Aksi</th>
+              <th
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+              >
+                No
+              </th>
+              <th
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+              >
+                Nama
+              </th>
+              <th
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+              >
+                Email
+              </th>
+              <th
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+              >
+                Role
+              </th>
+              <th
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+              >
+                Gender
+              </th>
+
+              <th
+                class="px-4 py-3 text-left text-sm font-semibold text-gray-700"
+              >
+                Tanggal Lahir
+              </th>
+
+              <th
+                class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
+              >
+                Aksi
+              </th>
             </tr>
           </thead>
+
           <tbody class="divide-y divide-gray-200"></tbody>
         </table>
       </div>
@@ -127,15 +208,23 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.tailwindcss.min.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+
   let userTable;
+
   const canUpdate = {{ can_update|default(true)|tojson }};
 
+
+
   $(function() {
+
     userTable = $('#usersTable').DataTable({
       processing: true,
       searching: false,
@@ -161,16 +250,14 @@
         {
           data: "first_name",
           render: function(data, type, row) {
-            // PERBAIKAN LOGIKA PROFIL DISINI
             const fullName = (data + ' ' + (row.last_name || '')).trim();
-            const avatarUrl = row.profile_picture 
-                              ? row.profile_picture 
+            const avatarUrl = row.profile_picture
+                              ? row.profile_picture
                               : `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0077b5&color=fff`;
-
             return `<div class="flex items-center">
               <div class="h-10 w-10 flex-shrink-0">
-                <img class="h-10 w-10 rounded-full object-cover border border-gray-200" 
-                     src="${avatarUrl}" 
+                <img class="h-10 w-10 rounded-full object-cover border border-gray-200"
+                     src="${avatarUrl}"
                      onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(data)}&background=0077b5&color=fff'" />
               </div>
               <div class="ml-4">
@@ -212,29 +299,36 @@
         }
       ]
     });
-
     $('#filterName, #filterEmail').on('input', function() {
       setTimeout(() => userTable.ajax.reload(), 500);
     });
-
     $('#filterRole, #filterGender').on('change', () => userTable.ajax.reload());
   });
-
   function editUser(id) {
     window.location.href = "{{ url_for('admin_edit_user', user_id=0) }}".replace('0', id);
   }
-
   function reloadTable() {
     userTable.ajax.reload();
   }
 </script>
-
 <style>
   /* Style sesuai kode awal Anda */
   #usersTable_wrapper .dataTables_length,
   #usersTable_wrapper .dataTables_info,
-  #usersTable_wrapper .dataTables_paginate { padding: 1rem; }
-  .dataTables_paginate .paginate_button { padding: 0.25rem 0.75rem; margin: 0 0.25rem; border: 1px solid #d1d5db; border-radius: 0.5rem; }
-  .dataTables_paginate .paginate_button.current { background-color: #0a66c2; color: white !important; border-color: #0a66c2; }
+  #usersTable_wrapper .dataTables_paginate {
+    padding: 1rem;
+  }
+  .dataTables_paginate .paginate_button {
+    padding: 0.25rem 0.75rem;
+    margin: 0 0.25rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+  }
+  .dataTables_paginate .paginate_button.current {
+    background-color: #0a66c2;
+    color: white !important;
+    border-color: #0a66c2;
+  }
+  
 </style>
 {% endblock %}

@@ -16,56 +16,59 @@
 
     <div class="p-6">
         <div class="flex flex-col md:flex-row gap-10">
+            
             <div class="md:w-1/3 flex flex-col items-center" data-aos="zoom-in">
                 <div class="relative group">
                     <div class="w-40 h-40 rounded-full border-4 border-linkedin-background overflow-hidden shadow-md group-hover:border-blue-100 transition-all">
                         <img
                             id="previewProfile"
-                            src="{{ current_user.profile_image if current_user.profile_image else 'https://via.placeholder.com/150' }}"
+                            src="{{ user.profile_image_url if user.profile_image_url else 'https://via.placeholder.com/150' }}"
                             alt="Profile"
                             class="w-full h-full object-cover"
                         />
                     </div>
                     <label for="uploadPhoto" class="absolute bottom-2 right-2 bg-linkedin-blue text-white rounded-full w-10 h-10 flex items-center justify-center cursor-pointer shadow-lg hover:bg-linkedin-dark transition-colors">
                         <i class="fas fa-camera"></i>
-                        <input type="file" id="uploadPhoto" class="hidden" accept="image/*">
+                        <input type="file" id="uploadPhoto" name="profile_photo" class="hidden" accept="image/*">
                     </label>
                 </div>
-                <button class="mt-4 text-linkedin-blue text-xs font-bold hover:underline">
+                <button type="button" onclick="document.getElementById('uploadPhoto').click()" class="mt-4 text-linkedin-blue text-xs font-bold hover:underline">
                     <i class="fas fa-sync-alt mr-1"></i> Perbarui Foto
                 </button>
+                <p class="text-[10px] text-gray-400 mt-2 italic text-center px-4">Format: JPG, PNG. Maksimal 2MB.</p>
             </div>
 
             <div class="md:w-2/3" data-aos="fade-left">
                 <form id="profileForm" method="POST" action="{{ url_for('edit_profile_user', user_id=current_user.id) }}" class="space-y-5">
+                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nama Depan</label>
-                            <input type="text" name="first_name" value="{{ current_user.first_name }}" required
+                            <input type="text" name="first_name" value="{{ user.first_name or '' }}" required
                                 class="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none transition-all text-sm" />
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Nama Belakang</label>
-                            <input type="text" name="last_name" value="{{ current_user.last_name }}" required
+                            <input type="text" name="last_name" value="{{ user.last_name or '' }}" required
                                 class="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none transition-all text-sm" />
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Alamat Email</label>
-                        <input type="email" value="{{ current_user.email }}" readonly
+                        <input type="email" value="{{ user.email }}" readonly
                             class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-gray-500 text-sm cursor-not-allowed" />
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">No. Telepon</label>
-                            <input type="tel" name="phone_number" value="{{ current_user.phone_number }}"
+                            <input type="tel" name="phone_number" value="{{ user.phone_number or '' }}"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none transition-all text-sm" />
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Tanggal Lahir</label>
-                            <input type="date" name="birth_date" value="{{ current_user.birth_date.strftime('%Y-%m-%d') if current_user.birth_date else '' }}"
+                            <input type="date" name="birth_date" value="{{ user.birth_date.strftime('%Y-%m-%d') if user.birth_date else '' }}"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none transition-all text-sm" />
                         </div>
                     </div>
@@ -73,16 +76,16 @@
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Jenis Kelamin</label>
                         <select name="gender" class="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none bg-white transition-all text-sm appearance-none">
-                            <option value="MALE" {% if current_user.gender|string == 'MALE' %}selected{% endif %}>Laki-laki</option>
-                            <option value="FEMALE" {% if current_user.gender|string == 'FEMALE' %}selected{% endif %}>Perempuan</option>
-                            <option value="OTHER" {% if current_user.gender|string == 'OTHER' %}selected{% endif %}>Lainnya</option>
+                            <option value="MALE" {% if user.gender|string == 'MALE' %}selected{% endif %}>Laki-laki</option>
+                            <option value="FEMALE" {% if user.gender|string == 'FEMALE' %}selected{% endif %}>Perempuan</option>
+                            <option value="OTHER" {% if user.gender|string == 'OTHER' %}selected{% endif %}>Lainnya</option>
                         </select>
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Alamat Lengkap</label>
                         <textarea rows="3" name="address"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none transition-all text-sm">{{ current_user.address }}</textarea>
+                            class="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-1 focus:ring-linkedin-blue focus:border-linkedin-blue outline-none transition-all text-sm">{{ user.address or '' }}</textarea>
                     </div>
 
                     <div class="pt-4 flex justify-end">
@@ -98,82 +101,129 @@
 </div>
 
 <script>
+    // Inisialisasi Element
     const profileForm = document.getElementById('profileForm');
-    const submitBtn = document.getElementById('submitBtn');
+    const uploadPhotoInput = document.getElementById('uploadPhoto');
+    const previewProfile = document.getElementById('previewProfile');
 
-    profileForm.addEventListener('submit', function(e) {
-        e.preventDefault(); // Stop form dari submit otomatis
+    // --- 1. LOGIKA PREVIEW & VALIDASI FILE ---
+    if (uploadPhotoInput) {
+        uploadPhotoInput.addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const file = e.target.files[0];
+                const maxSize = 2 * 1024 * 1024; // Limit 2MB
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
 
-        Swal.fire({
-            title: 'Simpan Perubahan?',
-            text: "Pastikan data yang Anda masukkan sudah benar.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#0a66c2',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Ya, Simpan!',
-            cancelButtonText: 'Batal',
-            heightAuto: false
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Tampilkan loading
-                Swal.fire({
-                    title: 'Memproses...',
-                    html: 'Sedang memperbarui profil Anda',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                // Kirim form secara manual
-                const formData = new FormData(profileForm);
-                
-                fetch(profileForm.action, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (response.ok) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: 'Profil Anda telah diperbarui.',
-                            confirmButtonColor: '#0a66c2',
-                            timer: 2000,
-                            timerProgressBar: true
-                        }).then(() => {
-                            window.location.reload(); // Refresh halaman untuk melihat perubahan
-                        });
-                    } else {
-                        throw new Error('Terjadi kesalahan saat menyimpan.');
-                    }
-                })
-                .catch(error => {
+                // Alert Validasi: Format File
+                if (!allowedTypes.includes(file.type)) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Oops...',
-                        text: error.message,
+                        title: 'Format Tidak Didukung',
+                        text: 'Silakan pilih gambar dengan format JPG atau PNG.',
                         confirmButtonColor: '#0a66c2'
                     });
-                });
+                    this.value = ''; // Reset input
+                    return;
+                }
+
+                // Alert Validasi: Ukuran File > 2MB
+                if (file.size > maxSize) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'File Terlalu Besar',
+                        text: 'Ukuran foto maksimal adalah 2MB. Foto Anda saat ini: ' + (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+                        confirmButtonColor: '#0a66c2'
+                    });
+                    this.value = ''; // Reset input
+                    return;
+                }
+
+                // Jika lolos validasi, tampilkan preview
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    previewProfile.setAttribute('src', event.target.result);
+                }
+                reader.readAsDataURL(file);
             }
         });
-    });
+    }
 
-    // Preview Gambar
-    document.getElementById('uploadPhoto')?.addEventListener('change', function(e) {
-        if (e.target.files && e.target.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                document.getElementById('previewProfile').setAttribute('src', event.target.result);
-            }
-            reader.readAsDataURL(e.target.files[0]);
-        }
-    });
+    // --- 2. LOGIKA SUBMIT FORM (AJAX) ---
+    if (profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Mencegah reload halaman otomatis
+
+            Swal.fire({
+                title: 'Simpan Perubahan?',
+                text: "Data profil dan foto Anda akan diperbarui.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0a66c2',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Simpan!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Tampilkan Loading Alert
+                    Swal.fire({
+                        title: 'Memproses...',
+                        html: 'Sedang mengunggah data ke server',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Siapkan FormData untuk mengirim file dan teks
+                    const formData = new FormData(profileForm);
+                    
+                    // Tambahkan file foto secara manual dari input file
+                    if (uploadPhotoInput.files[0]) {
+                        formData.append('profile_photo', uploadPhotoInput.files[0]);
+                    }
+
+                    // Kirim ke Route Flask
+                    fetch(profileForm.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { throw new Error(err.message) });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // ALERT SUCCESS
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: data.message,
+                                showConfirmButton: false,
+                                timer: 2000,
+                                timerProgressBar: true
+                            }).then(() => {
+                                window.location.reload(); // Refresh untuk melihat hasil terbaru
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        // ALERT ERROR
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Memperbarui',
+                            text: error.message || 'Terjadi kesalahan pada koneksi server.',
+                            confirmButtonColor: '#0a66c2'
+                        });
+                    });
+                }
+            });
+        });
+    }
 </script>
-
 <style>
+    /* Kustomisasi Dropdown Arrow */
     select {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
         background-position: right 1rem center;

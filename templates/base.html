@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}E-Commerce{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/output.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -100,7 +100,7 @@
           <div class="h-16 bg-linkedin-blue"></div>
           <div class="px-4 pb-4 text-center -mt-8">
             <img
-              src="https://randomuser.me/api/portraits/women/65.jpg"
+              src="{{ user.profile_image_url if user.profile_image_url else 'https://via.placeholder.com/150' }}"
               alt="Profile"
               class="w-16 h-16 rounded-full mx-auto border-4 border-white"
             />

@@ -40,6 +40,7 @@ class User(Base, UserMixin):
     is_active = Column(Boolean, default=True)
     birth_date = Column(DateTime, nullable=True)  
 
+    image_profile = relationship("ImageUsers", backref="user", cascade="all, delete-orphan")
     cart_items = relationship("Cart", back_populates="user", cascade="all, delete-orphan")
     def set_password(self, password):
         """Set password hash"""
@@ -59,6 +60,15 @@ class User(Base, UserMixin):
 
     def __repr__(self):
         return f'<User {self.email}>'
+    
+class ImageUsers(Base):
+    __tablename__ = "image_users_db"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users_db.id', ondelete='CASCADE'))
+    file_data = Column(LargeBinary)
+    file_name = Column(String(255), nullable=False)
+    file_size = Column(Integer, nullable=False)
+    file_type = Column(String(50), nullable=False)
     
 class Product(Base):
     __tablename__ = 'product_db'

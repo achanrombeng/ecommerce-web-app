@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Admin Panel - LinkedCommerce{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/output.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
-    <script>
+    <!-- <script>
       tailwind.config = {
         theme: {
           extend: {
@@ -25,7 +25,7 @@
           },
         },
       };
-    </script>
+    </script> -->
     <style>
       .sidebar {
         transition: all 0.3s ease;
@@ -89,10 +89,10 @@
         <!-- User Info -->
         <div class="p-4 border-b border-gray-200 flex items-center">
           <img
-            src="https://randomuser.me/api/portraits/men/75.jpg"
-            alt="Admin Profile"
-            class="w-10 h-10 rounded-full mr-3 border-2 border-linkedin-blue"
-          />
+  src="{{ current_user.profile_image_url if current_user.profile_image_url else 'https://via.placeholder.com/150' }}"
+  alt="Profile"
+  class="w-12 h-12 rounded-full border-2 border-white"
+/>
           <div class="sidebar-text">
             <p class="font-medium text-gray-800">{{ current_user.first_name }} {{ current_user.last_name }}</p>
             <p class="text-xs text-gray-500">Administrator</p>
