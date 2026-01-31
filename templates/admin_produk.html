@@ -28,61 +28,82 @@ LinkedCommerce{% endblock %} {% block page_title %}Kelola Produk{% endblock %}
   href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
   rel="stylesheet"
 />
+
+<style>
+  /* 1. Paksa Container Utama */
+  .overflow-x-auto.w-full {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  /* 2. Paksa Tabel dan Wrapper Datatables */
+  #productsTable,
+  .dataTables_wrapper,
+  .dataTables_scrollHeadInner,
+  .dataTables_scrollBody,
+  table.dataTable {
+    width: 100% !important;
+    min-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* 3. Pengaturan Rata Kiri Semua Kolom */
+  #productsTable th, 
+  #productsTable td {
+    text-align: left !important; /* Rata kiri semua */
+    vertical-align: middle !important;
+    padding: 12px 16px !important; /* Jarak antar kolom lebih lega */
+  }
+
+  #productsTable td {
+    white-space: nowrap;
+  }
+
+  /* Izinkan Nama Produk untuk Wrap jika layar sempit */
+  #productsTable td:nth-child(2) {
+    white-space: normal !important;
+    min-width: 250px;
+  }
+
+  .dataTables_wrapper .grid {
+    margin: 0 !important;
+    width: 100% !important;
+  }
+</style>
+
 <div class="space-y-6">
-  <!-- Header Actions -->
-  <div
-    class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
-    data-aos="fade-up"
-  >
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4" data-aos="fade-up">
     <div>
       <h2 class="text-xl font-semibold text-gray-800">Daftar Produk</h2>
-      <p class="text-sm text-gray-600 mt-1">
-        Kelola semua produk di toko online Anda
-      </p>
+      <p class="text-sm text-gray-600 mt-1">Kelola semua produk di toko online Anda</p>
     </div>
   </div>
 
-  <!-- Stats Cards -->
-  <div
-    class="grid grid-cols-1 md:grid-cols-4 gap-6"
-    data-aos="fade-up"
-    data-aos-delay="100"
-  >
-    <div
-      class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-linkedin-blue"
-    >
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6" data-aos="fade-up" data-aos-delay="100">
+    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-linkedin-blue">
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-600">Total Produk</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="totalProducts">
-            {{ total_products }}
-          </h3>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="totalProducts">{{ total_products }}</h3>
         </div>
         <div class="bg-linkedin-background p-3 rounded-full">
           <i class="fas fa-cube text-linkedin-blue text-xl"></i>
         </div>
       </div>
     </div>
-
-    <div
-      class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-green-500"
-    >
+    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-600">Produk Aktif</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="activeProducts">
-            {{ active }}
-          </h3>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="activeProducts">{{ active }}</h3>
         </div>
         <div class="bg-green-50 p-3 rounded-full">
           <i class="fas fa-check-circle text-green-500 text-xl"></i>
         </div>
       </div>
     </div>
-
-    <div
-      class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500"
-    >
+    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-600">Stok Menipis</p>
@@ -93,16 +114,11 @@ LinkedCommerce{% endblock %} {% block page_title %}Kelola Produk{% endblock %}
         </div>
       </div>
     </div>
-
-    <div
-      class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-red-500"
-    >
+    <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-600">Habis Stok</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="outOfStock">
-            {{ out }}
-          </h3>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="outOfStock">{{ out }}</h3>
         </div>
         <div class="bg-red-50 p-3 rounded-full">
           <i class="fas fa-times-circle text-red-500 text-xl"></i>
@@ -111,52 +127,32 @@ LinkedCommerce{% endblock %} {% block page_title %}Kelola Produk{% endblock %}
     </div>
   </div>
 
-  <!-- Products Table -->
-  <div
-    class="bg-white rounded-lg shadow"
-    data-aos="fade-up"
-    data-aos-delay="200"
-  >
+  <div class="bg-white rounded-lg shadow" data-aos="fade-up" data-aos-delay="200">
     <div class="p-6">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
           <i class="fas fa-list"></i> Daftar Produk
         </h2>
         <div class="gap-4 flex">
-          <a
-            class="bg-linkedin-blue hover:bg-linkedin-dark text-white px-4 py-2 rounded-lg font-medium transition duration-200"
-            href="{{ url_for('admin_add_product') }}"
-          >
+          <a class="bg-linkedin-blue hover:bg-linkedin-dark text-white px-4 py-2 rounded-lg font-medium transition duration-200" href="{{ url_for('admin_add_product') }}">
             <i class="fas fa-plus mr-2"></i>Tambah Produk
           </a>
-          <button
-            onclick="reloadTable()"
-            class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition"
-          >
+          <button type="button" onclick="reloadTable()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition">
             <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
           </button>
         </div>
       </div>
 
-      <div class="overflow-x-auto">
-        <table id="productsTable" class="w-full">
+      <div class="overflow-x-auto w-full">
+        <table id="productsTable" class="w-full" style="width: 100% !important">
           <thead class="bg-gray-100 border-b border-gray-300">
-            <!-- Filter Row -->
             <tr class="bg-gray-50">
               <th class="px-4 py-3"></th>
               <th class="px-4 py-3">
-                <input
-                  type="text"
-                  id="filterName"
-                  placeholder="Filter Nama"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-                />
+                <input type="text" id="filterName" placeholder="Filter Nama" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"/>
               </th>
               <th class="px-4 py-3">
-                <select
-                  id="filterCategory"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-                >
+                <select id="filterCategory" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue">
                   <option value="">Semua Kategori</option>
                   <option value="smartphone">Smartphone</option>
                   <option value="laptop">Laptop</option>
@@ -165,26 +161,13 @@ LinkedCommerce{% endblock %} {% block page_title %}Kelola Produk{% endblock %}
                 </select>
               </th>
               <th class="px-4 py-3">
-                <input
-                  type="number"
-                  id="filterPrice"
-                  placeholder="Max Harga"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-                />
+                <input type="number" id="filterPrice" placeholder="Max Harga" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"/>
               </th>
               <th class="px-4 py-3">
-                <input
-                  type="number"
-                  id="filterStock"
-                  placeholder="Max Stok"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-                />
+                <input type="number" id="filterStock" placeholder="Max Stok" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"/>
               </th>
               <th class="px-4 py-3">
-                <select
-                  id="filterStatus"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue"
-                >
+                <select id="filterStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-linkedin-blue">
                   <option value="">Semua Status</option>
                   <option value="aktif">Aktif</option>
                   <option value="nonaktif">Non-aktif</option>
@@ -192,49 +175,17 @@ LinkedCommerce{% endblock %} {% block page_title %}Kelola Produk{% endblock %}
               </th>
               <th class="px-4 py-3"></th>
             </tr>
-
-            <!-- Header Row -->
             <tr>
-              <th
-                class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
-              >
-                No
-              </th>
-              <th
-                class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
-              >
-                Nama Produk
-              </th>
-              <th
-                class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
-              >
-                Kategori
-              </th>
-              <th
-                class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
-              >
-                Harga
-              </th>
-              <th
-                class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
-              >
-                Stock
-              </th>
-              <th
-                class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
-              >
-                Status
-              </th>
-              <th
-                class="px-4 py-3 text-center text-sm font-semibold text-gray-700"
-              >
-                Aksi
-              </th>
+              <th class="text-sm font-semibold text-gray-700">No</th>
+              <th class="text-sm font-semibold text-gray-700">Nama Produk</th>
+              <th class="text-sm font-semibold text-gray-700">Kategori</th>
+              <th class="text-sm font-semibold text-gray-700">Harga</th>
+              <th class="text-sm font-semibold text-gray-700">Stock</th>
+              <th class="text-sm font-semibold text-gray-700">Status</th>
+              <th class="text-sm font-semibold text-gray-700">Aksi</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200">
-            <!-- Data will be populated by DataTables -->
-          </tbody>
+          <tbody class="divide-y divide-gray-200"></tbody>
         </table>
       </div>
     </div>
@@ -247,232 +198,142 @@ LinkedCommerce{% endblock %} {% block page_title %}Kelola Produk{% endblock %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-    let productTable;
+  let productTable;
+  const canUpdate = "{{ can_update|tojson }}";
+  const canDelete = "{{ can_delete|tojson }}";
 
-    // Mengambil variable permission dari Flask context
-    const canUpdate = {{ can_update|tojson }};
-    const canDelete = {{ can_delete|tojson }};
+  $(function() {
+      productTable = $('#productsTable').DataTable({
+          processing: true,
+          serverSide: false,
+          autoWidth: false,
+          searching: false,
+          ordering: true,
+          order: [[0, 'asc']],
+          pageLength: 10,
+          dom: 'rtip',
+          ajax: {
+              url: "{{ url_for('admin_products') }}",
+              type: "POST",
+              data: function(d) {
+                  return {
+                      name: $('#filterName').val(),
+                      category: $('#filterCategory').val(),
+                      maxPrice: $('#filterPrice').val(),
+                      status: $('#filterStatus').val()
+                  };
+              }
+          },
+          columns: [
+              { data: null, className: "text-left w-12", render: (data, type, row, meta) => meta.row + 1 },
+              {
+                  data: "product_name",
+                  className: "text-left",
+                  render: function (data, type, row) {
+                      const placeholder = `https://ui-avatars.com/api/?name=${encodeURIComponent(data)}`;
+                      return `
+                      <div class="flex items-center justify-start min-w-[250px]">
+                          <img class="h-10 w-10 rounded shadow-sm flex-shrink-0" src="${row.product_image || placeholder}">
+                          <div class="ml-3 text-left"> 
+                              <div class="text-sm font-bold text-gray-900 leading-tight">${data}</div>
+                              <div class="text-xs text-gray-500">ID: #${row.product_id}</div>
+                          </div>
+                      </div>`;
+                  }
+              },
+              { data: "product_category", className: "text-left" },
+              { 
+                  data: "product_price", 
+                  className: "text-left", 
+                  render: (data) => `<b class="whitespace-nowrap">Rp ${data}</b>` 
+              },
+              { data: "product_stock", className: "text-left" },
+              {
+                  data: "product_status",
+                  className: "text-left",
+                  render: function (data) {
+                      const cls = data === 'Available' || data === 'aktif' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                      return `<span class="px-3 py-1 rounded-full text-xs font-medium ${cls}">${data}</span>`;
+                  },
+              },
+              {
+                  data: null,
+                  orderable: false,
+                  className: "text-left",
+                  render: function (data, type, row) {
+                      let html = '<div class="flex justify-start gap-2">';
+                      if (canUpdate == true || canUpdate == "true") {
+                          html += `
+                          <button onclick="editProduct(${row.product_id})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                              <i class="fas fa-edit"></i>
+                          </button>`;
+                      }
+                      if (canDelete == true || canDelete == "true") {
+                          html += `
+                          <button onclick="deleteProduct(${row.product_id})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                              <i class="fas fa-trash"></i>
+                          </button>`;
+                      }
+                      html += '</div>';
+                      return html;
+                  },
+              },
+          ],
+          "drawCallback": function( settings ) {
+               this.api().columns.adjust();
+          }
+      });
 
-    $(function() {
-        // Inisialisasi DataTable
-        productTable = $('#productsTable').DataTable({
-            processing: true,
-            serverSide: false, // Ubah ke true jika data sudah ribuan
-            searching: false,
-            ordering: true,
-            order: [[0, 'asc']], // Urutkan berdasarkan kolom No
-            pageLength: 10,
-            language: {
-                processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Memuat...</span>',
-                emptyTable: "Tidak ada data produk ditemukan",
-                zeroRecords: "Pencarian tidak ditemukan"
-            },
-            ajax: {
-                url: "{{ url_for('admin_products') }}",
-                type: "POST",
-                data: function(d) {
-                    // Mengirim parameter filter ke Backend
-                    return {
-                        name: $('#filterName').val(),
-                        category: $('#filterCategory').val(),
-                        maxPrice: $('#filterPrice').val(),
-                        status: $('#filterStatus').val()
-                    };
-                },
-                error: function(xhr, error, code) {
-                    console.error("DataTables Error:", xhr.responseText);
-                }
-            },
-            columns: [
-                {
-                    // Kolom Nomor Urut
-                    data: null,
-                    className: "text-center",
-                    render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1,
-                },
-                {
-                    // Kolom Nama Produk + Gambar (Mirip Manajemen User)
-                    data: "product_name",
-                    render: function (data, type, row) {
-                        const placeholder = `https://ui-avatars.com/api/?name=${encodeURIComponent(data)}&background=f3f4f6&color=666&size=128`;
-                        const imageUrl = row.product_image ? row.product_image : placeholder;
-                        
-                        return `
-                        <div class="flex items-center">
-                            <div class="h-12 w-12 flex-shrink-0">
-                                <img class="h-12 w-12 rounded-lg object-cover border border-gray-200 shadow-sm bg-white" 
-                                     src="${imageUrl}" 
-                                     onerror="this.src='${placeholder}'">
-                            </div>
-                            <div class="ml-4">
-                                <div class="text-sm font-bold text-gray-900 line-clamp-1" title="${data}">${data}</div>
-                                <div class="text-xs text-gray-500 font-mono">ID: #${row.product_id}</div>
-                            </div>
-                        </div>`;
-                    },
-                },
-                { 
-                    data: "product_category",
-                    render: (data) => `<span class="text-sm text-gray-600">${data}</span>`
-                },
-                {
-                    data: "product_price",
-                    className: "font-medium",
-                    render: (data) => `<span class="text-gray-900 font-semibold">Rp ${data}</span>`
-                },
-                { 
-                    data: "product_stock",
-                    className: "text-center",
-                    render: function(data) {
-                        let color = data < 10 ? 'text-red-600 font-bold' : 'text-gray-700';
-                        return `<span class="${color}">${data}</span>`;
-                    }
-                },
-                {
-                    data: "product_status",
-                    render: function (data) {
-                        const colors = {
-                            'Available': 'bg-green-100 text-green-800',
-                            'Unavailable': 'bg-red-100 text-red-800',
-                            'Out Of Stock': 'bg-yellow-100 text-yellow-800'
-                        };
-                        const cls = colors[data] || 'bg-gray-100 text-gray-800';
-                        return `<span class="px-2.5 py-1 rounded-full text-xs font-medium ${cls}">${data}</span>`;
-                    },
-                },
-                {
-                    // Kolom Aksi
-                    data: null,
-                    orderable: false,
-                    className: "text-center",
-                    render: function (data, type, row) {
-                        let html = '<div class="flex justify-center gap-2">';
-                        if (canUpdate) {
-                            html += `
-                            <button onclick="editProduct(${row.product_id})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>`;
-                        }
-                        if (canDelete) {
-                            html += `
-                            <button onclick="deleteProduct(${row.product_id})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Hapus">
-                                <i class="fas fa-trash"></i>
-                            </button>`;
-                        }
-                        html += '</div>';
-                        return html;
-                    },
-                },
-            ],
-            // Styling Row agar selang-seling (Zebra)
-            createdRow: function(row, data, dataIndex) {
-                if (dataIndex % 2 === 0) $(row).addClass('bg-gray-50/50');
-            }
-        });
+      $('#filterName, #filterPrice, #filterCategory, #filterStatus').on('change keyup', function() {
+          productTable.ajax.reload();
+      });
+  });
 
-        // Handler Filter Dinamis
-        let typingTimer;
-        $('#filterName, #filterPrice').on('input', function() {
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(() => { productTable.ajax.reload(); }, 500);
-        });
+  function reloadTable() {
+      if (productTable) {
+          productTable.ajax.reload(null, false); // false agar tetap di halaman pagination yang sama
+      }
+  }
 
-        $('#filterCategory, #filterStatus').on('change', function() {
-            productTable.ajax.reload();
-        });
-    });
+  function editProduct(id) {
+      window.location.href = "{{ url_for('admin_edit_product', product_id=0) }}".replace('0', id);
+  }
 
-    // Navigasi ke Halaman Edit
-    function editProduct(id) {
-        window.location.href = "{{ url_for('admin_edit_product', product_id=0) }}".replace('0', id);
-    }
-
-    // Fungsi Reload Manual (Tombol Refresh)
-    function reloadTable() {
-        productTable.ajax.reload(null, false); // false agar paging tidak reset
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon: 'success',
-            title: 'Data diperbarui',
-            showConfirmButton: false,
-            timer: 1500
-        });
-    }
-
-    // Logika Hapus Produk dengan SweetAlert2
-    function deleteProduct(id) {
-        Swal.fire({
-            title: 'Hapus Produk?',
-            text: "Data yang dihapus tidak dapat dikembalikan!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const deleteUrl = "{{ url_for('admin_delete_product', product_id=0) }}".replace('0', id);
-                
-                fetch(deleteUrl, { 
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire('Berhasil!', data.message, 'success').then(() => {
-                            location.reload(); // Reload untuk update statistik cards
-                        });
-                    } else {
-                        Swal.fire('Gagal', data.message, 'error');
-                    }
-                })
-                .catch(err => {
-                    Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
-                });
-            }
-        });
-    }
+  function deleteProduct(id) {
+      Swal.fire({
+          title: 'Apakah Anda yakin?',
+          text: "Produk yang dihapus tidak bisa dikembalikan!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Ya, hapus!',
+          cancelButtonText: 'Batal'
+      }).then((result) => {
+          if (result.isConfirmed) {
+              fetch("{{ url_for('admin_delete_product', product_id=0) }}".replace('0', id), {
+                  method: 'DELETE',
+              })
+              .then(response => response.json())
+              .then(data => {
+                  if(data.success) {
+                      Swal.fire('Terhapus!', 'Produk telah dihapus.', 'success');
+                      productTable.ajax.reload();
+                  } else {
+                      Swal.fire('Gagal!', data.message, 'error');
+                  }
+              });
+          }
+      })
+  }
 </script>
+
 <style>
-  #productsTable_wrapper .dataTables_length,
-  #productsTable_wrapper .dataTables_filter,
-  #productsTable_wrapper .dataTables_info,
-  #productsTable_wrapper .dataTables_paginate {
-    padding: 1rem;
-  }
-
-  #productsTable_wrapper .dataTables_filter input {
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    margin-left: 0.5rem;
-  }
-
-  #productsTable_wrapper .dataTables_length select {
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    margin: 0 0.5rem;
-  }
-
-  .dataTables_paginate .paginate_button {
-    padding: 0.25rem 0.75rem;
-    margin: 0 0.25rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-  }
-
-  .dataTables_paginate .paginate_button.current {
-    background-color: #0a66c2;
-    color: white;
-    border-color: #0a66c2;
-  }
-
-  .dataTables_paginate .paginate_button:hover:not(.current) {
-    background-color: #f3f4f6;
+  #productsTable_wrapper .dataTables_paginate .paginate_button.current {
+    background: #0a66c2 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px !important;
   }
 </style>
 {% endblock %}

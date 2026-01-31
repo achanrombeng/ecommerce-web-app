@@ -10,6 +10,7 @@ from sqlalchemy.orm import joinedload
 from models import GenderEnum, Image, ImageUsers, Order, OrderStatusEnum, PaymentMethodEnum, Product, ProductOrder, RoleEnum, User, db, Cart
 import os
 import base64
+import hashlib
 import uuid
 import midtransclient
 from dotenv import load_dotenv
@@ -645,33 +646,34 @@ def admin_update_product(product_id):
 @app.route('/admin/orders', methods=['GET', 'POST'])
 @login_required
 def admin_orders():
-    users = db.session.query(User).all()
-    total_admins = len([user for user in users if user.is_admin()])
-    total_users = len(users) - total_admins
-    total_products = db.session.query(Product).count()
-    orders = db.session.query(Order).options(
-        joinedload(Order.product_orders).joinedload(ProductOrder.product),
-        joinedload(Order.user)
-    ).order_by(Order.created_at.desc()).all()
     if not current_user.is_admin():
         flash('Akses ditolak! Halaman ini hanya untuk admin.', 'error')
         return redirect(url_for('dashboard'))
-    
+
+    # Ambil data Admin yang sedang login untuk Sidebar (base-admin.html)
+    admin_obj = db.session.query(User).options(joinedload(User.image_profile)).filter_by(id=current_user.id).first()
+    admin_profile_url = None
+    if admin_obj and admin_obj.image_profile:
+        img = admin_obj.image_profile[0]
+        if img.file_data:
+            base64_admin = base64.b64encode(img.file_data).decode('utf-8')
+            admin_profile_url = f"data:{img.file_type};base64,{base64_admin}"
+    current_user.profile_image_url = admin_profile_url
+
     # Handle POST request untuk DataTables AJAX
     if request.method == 'POST':
-        # Ambil filter dari request
         customer_filter = request.form.get('customer', '').strip()
         date_filter = request.form.get('date', '').strip()
         max_amount = request.form.get('maxAmount', '').strip()
         status_filter = request.form.get('status', '').strip()
         
-        # Query orders dengan joins
+        # Query orders dengan joins dan eager load profil image user
         query = db.session.query(Order).options(
             joinedload(Order.product_orders).joinedload(ProductOrder.product),
-            joinedload(Order.user)
+            joinedload(Order.user).joinedload(User.image_profile)
         )
         
-        # Apply filters
+        # Filter logic
         if customer_filter:
             query = query.join(Order.user).filter(
                 db.or_(
@@ -682,8 +684,6 @@ def admin_orders():
             )
         
         if date_filter:
-            # Filter by date (assuming created_at is datetime)
-            from datetime import datetime
             try:
                 filter_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
                 query = query.filter(db.func.date(Order.created_at) == filter_date)
@@ -697,7 +697,6 @@ def admin_orders():
                 pass
         
         if status_filter:
-            # Sesuaikan dengan Enum 
             if status_filter.lower() == 'pending':
                 query = query.filter(Order.status == OrderStatusEnum.PENDING)
             elif status_filter.lower() == 'approve':
@@ -707,24 +706,36 @@ def admin_orders():
         
         orders = query.order_by(Order.created_at.desc()).all()
         
-        # Format data untuk DataTables
         data = []
         for order in orders:
             # Hitung total items
             total_items = sum((po.quantity or 0) for po in order.product_orders)
-            
-            # Format amount
             amount_formatted = "{:,.0f}".format(order.amount or 0)
             
-            # Customer info
-            customer_name = f"{order.user.first_name} {order.user.last_name}"
-            customer_avatar = f"https://ui-avatars.com/api/?name={order.user.first_name}+{order.user.last_name}"
+            # LOGIKA IMAGE PROFILE PELANGGAN
+            u = order.user
+            customer_avatar = None
+            if u.image_profile:
+                img_u = u.image_profile[0]
+                if img_u.file_data:
+                    try:
+                        b64_u = base64.b64encode(img_u.file_data).decode('utf-8')
+                        customer_avatar = f"data:{img_u.file_type};base64,{b64_u}"
+                    except:
+                        customer_avatar = None
+            
+            # Jika tidak ada foto, gunakan UI-Avatars
+            if not customer_avatar:
+                customer_avatar = f"https://ui-avatars.com/api/?name={u.first_name}+{u.last_name}&background=0077b5&color=fff"
+            
+            customer_name = f"{u.first_name} {u.last_name}"
             
             data.append({
                 'id': order.id,
+                'user_id': order.user_id,
                 'total_items': total_items,
                 'customer_name': customer_name,
-                'customer_email': order.user.email,
+                'customer_email': u.email,
                 'customer_avatar': customer_avatar,
                 'created_at': order.created_at.isoformat(),
                 'date': order.created_at.strftime("%d %B %Y"),
@@ -736,24 +747,111 @@ def admin_orders():
         
         return jsonify({'data': data})
     
-    # Handle GET request - render template
-    orders = db.session.query(Order).options(
+    # Handle GET request (Render Awal)
+    user = db.session.query(User).all()
+    total_admins = len([u for u in user if u.is_admin()])
+    total_users = len(user) - total_admins
+    total_products = db.session.query(Product).count()
+    orders_all = db.session.query(Order).options(
         joinedload(Order.product_orders).joinedload(ProductOrder.product),
         joinedload(Order.user)
-    ).order_by(Order.created_at.desc()).all()
+    ).all()
     
-    pending = sum(1 for order in orders if order.status == OrderStatusEnum.PENDING)
-    approved = sum(1 for order in orders if order.status == OrderStatusEnum.APPROVE)
-    cancel = sum(1 for order in orders if order.status == OrderStatusEnum.CANCEL)
+    pending = sum(1 for o in orders_all if o.status == OrderStatusEnum.PENDING)
+    approved = sum(1 for o in orders_all if o.status == OrderStatusEnum.APPROVE)
+    cancel = sum(1 for o in orders_all if o.status == OrderStatusEnum.CANCEL)
     
     return render_template('admin_order.html', 
+                           orders=orders_all, 
+                           pending=pending, 
+                           approved=approved, 
+                           cancel=cancel,
+                           can_update=True,
+                           total_admins=total_admins,
                            total_users=total_users,
-                           total_products=total_products,
-                         orders=orders, 
-                         pending=pending, 
-                         approved=approved, 
-                         cancel=cancel,
-                         can_update=True)
+                           total_products=total_products)
+
+@app.route('/admin/orders-detail/<int:order_id>/<int:user_id>')
+@login_required
+def admin_order_detail(order_id, user_id):
+    # Cek admin terlebih dahulu
+    if not current_user.is_admin():
+        flash('Akses ditolak! Halaman ini hanya untuk admin.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        user = db.session.query(User).filter_by(id=user_id).first()
+        if not user:
+            flash('User tidak ditemukan!', 'error')
+            return redirect(url_for('admin_orders'))
+        
+        order = db.session.query(Order).options(
+            joinedload(Order.product_orders).joinedload(ProductOrder.product).joinedload(Product.images)
+        ).filter_by(id=order_id, user_id=user.id).first()
+        
+        if not order:
+            flash('Order tidak ditemukan untuk user ini!', 'error')
+            return redirect(url_for('admin_orders'))
+        
+        # Format harga untuk setiap product_order
+        for product_order in order.product_orders:
+            # Format harga produk
+            product_price = float(product_order.product.product_price) if product_order.product.product_price else 0
+            product_order.formatted_price = "{:,.0f}".format(product_price)
+            
+            # Format subtotal (harga x quantity)
+            quantity = int(product_order.quantity) if product_order.quantity else 0
+            subtotal = product_price * quantity
+            product_order.formatted_subtotal = "{:,.0f}".format(subtotal)
+            
+            # --- LOGIKA GAMBAR ---
+            img_base64 = None
+            if product_order.product.images and len(product_order.product.images) > 0:
+                first_img = product_order.product.images[0]
+                if first_img.file_data:
+                    try:
+                        b64 = base64.b64encode(first_img.file_data).decode('utf-8')
+                        img_base64 = f"data:{first_img.file_type};base64,{b64}"
+                    except:
+                        img_base64 = None
+            
+            # Simpan gambar ke product_order untuk diakses di template
+            product_order.product_image = img_base64 if img_base64 else 'https://via.placeholder.com/48'
+        
+        # Format total order
+        order_amount = float(order.amount) if order.amount else 0
+        order.formatted_total = "{:,.0f}".format(order_amount)
+        
+        # Data untuk sidebar/statistik
+        users = db.session.query(User).all()
+        total_admins = sum(1 for u in users if u.is_admin())
+        total_users = len(users) - total_admins
+        total_products = db.session.query(Product).count()
+        
+        # Data orders untuk keperluan lain jika diperlukan
+        orders = db.session.query(Order).options(
+            joinedload(Order.product_orders).joinedload(ProductOrder.product),
+            joinedload(Order.user)
+        ).order_by(Order.created_at.desc()).all()
+        
+        return render_template(
+            'admin_order_detail.html',
+            users=users,
+            total_admins=total_admins,
+            total_users=total_users,
+            total_products=total_products,
+            orders=orders,
+            order=order,
+            user=user
+        )
+        
+    except Exception as e:
+        print("Error detail:", str(e))
+        import traceback
+        traceback.print_exc()
+        flash('Terjadi kesalahan saat mengambil data order: ' + str(e), 'error')
+        return redirect(url_for('admin_orders'))
+
 @app.route('/admin/users', methods=['GET', 'POST'])
 @login_required
 def admin_users():
@@ -1245,6 +1343,61 @@ def process_order():
         db.session.rollback()
         print(f"CRITICAL ERROR: {str(e)}")
         return jsonify({'success': False, 'message': 'Internal Server Error'}), 500
+    
+
+# webhook update payment status dari midtrans
+# @app.route('/api/payment/callback', methods=['POST'])
+# def midtrans_webhook():
+#     data = request.get_json()
+#     print("WEBHOOK DATA RECEIVED:", data)
+    
+#     # 1. Identifikasi Transaksi
+#     mid_order_id = data.get('order_id')
+#     status_code = data.get('status_code')
+#     gross_amount = data.get('gross_amount')
+#     signature_key = data.get('signature_key')
+#     transaction_status = data.get('transaction_status')
+    
+#     # 2. Verifikasi Signature (Keamanan)
+#     server_key = os.environ.get('SNAP_SERVER_KEY') 
+#     payload = f"{mid_order_id}{status_code}{gross_amount}{server_key}"
+#     calc_signature = hashlib.sha512(payload.encode()).hexdigest()
+
+#     if calc_signature != signature_key:
+#         return jsonify({"success": False, "message": "Invalid Signature"}), 401
+
+#     # 3. Cari Order di Database
+#     # Kita filter berdasarkan midtrans_order_id yang kamu simpan saat checkout
+#     order = db.session.query(Order).filter(Order.id == mid_order_id).first()
+    
+#     if not order:
+#         return jsonify({"success": False, "message": "Order tidak ditemukan"}), 404
+
+#     # 4. Trigger Perubahan Status
+#     try:
+#         if transaction_status in ['capture', 'settlement']:
+#             # Pembayaran Berhasil
+#             order.status = OrderStatusEnum.APPROVE
+            
+#         elif transaction_status in ['expire', 'cancel', 'deny']:
+#             # Pembayaran Gagal/Expired
+#             order.status = OrderStatusEnum.CANCEL
+            
+#             # Balikkan Stok: Cari item yang dipesan melalui ProductOrder
+#             # Karena model Order menggunakan secondary='product_order_db'
+#             items = db.session.query(ProductOrder).filter_by(order_id=order.id).all()
+#             for item in items:
+#                 prod = db.session.query(Product).get(item.product_id)
+#                 if prod:
+#                     prod.product_stock += item.quantity
+
+#         db.session.commit()
+#         return "OK", 200
+
+#     except Exception as e:
+#         db.session.rollback()
+#         print(f"WEBHOOK ERROR: {str(e)}")
+#         return jsonify({"success": False, "error": "Internal Server Error"}), 500
 
 @app.route('/order-user')
 @login_required
@@ -1553,8 +1706,5 @@ def edit_profile_user(user_id):
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
         
 
-
-  
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)

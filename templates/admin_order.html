@@ -16,8 +16,50 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
 
+<style>
+  /* 1. Paksa Container Utama */
+  .overflow-x-auto.w-full {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+  }
+
+  /* 2. Paksa Tabel dan Wrapper Datatables */
+  #ordersTable,
+  .dataTables_wrapper,
+  .dataTables_scrollHeadInner,
+  .dataTables_scrollBody,
+  table.dataTable {
+    width: 100% !important;
+    min-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  /* 3. Pengaturan Rata Kiri Semua Kolom */
+  #ordersTable th, 
+  #ordersTable td {
+    text-align: left !important;
+    vertical-align: middle !important;
+    padding: 12px 16px !important;
+  }
+
+  #ordersTable td {
+    white-space: nowrap;
+  }
+
+  /* Izinkan Kolom Pelanggan untuk Wrap */
+  #ordersTable td:nth-child(3) {
+    white-space: normal !important;
+    min-width: 200px;
+  }
+
+  .dataTables_wrapper .grid {
+    margin: 0 !important;
+    width: 100% !important;
+  }
+</style>
+
 <div class="space-y-6">
-  <!-- Header Actions -->
   <div class="flex flex-col md:flex-row justify-start items-start md:items-center gap-4" data-aos="fade-up">
     <div>
       <h2 class="text-xl font-semibold text-gray-800">Daftar Pesanan</h2>
@@ -25,15 +67,12 @@
     </div>
   </div>
 
-  <!-- Stats Cards -->
   <div class="grid grid-cols-1 md:grid-cols-4 gap-6" data-aos="fade-up" data-aos-delay="100">
     <div class="stats-card bg-white rounded-lg shadow p-6 border-l-4 border-linkedin-blue">
       <div class="flex items-center justify-between">
         <div>
           <p class="text-sm font-medium text-gray-600">Total Pesanan</p>
-          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="totalOrders">
-            {{ orders|length }}
-          </h3>
+          <h3 class="text-2xl font-bold text-gray-800 mt-1" id="totalOrders">{{ orders|length }}</h3>
         </div>
         <div class="bg-linkedin-background p-3 rounded-full">
           <i class="fas fa-shopping-bag text-linkedin-blue text-xl"></i>
@@ -78,7 +117,6 @@
     </div>
   </div>
 
-  <!-- Orders Table -->
   <div class="bg-white rounded-lg shadow" data-aos="fade-up" data-aos-delay="200">
     <div class="p-6">
       <div class="flex items-center justify-between mb-6">
@@ -86,16 +124,15 @@
           <i class="fas fa-list"></i> Daftar Pesanan
         </h2>
         <div class="gap-4 flex">
-          <button onclick="reloadTable()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition">
+          <button type="button" onclick="reloadTable()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg transition">
             <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
           </button>
         </div>
       </div>
 
-      <div class="overflow-x-auto">
-        <table id="ordersTable" class="w-full">
+      <div class="overflow-x-auto w-full">
+        <table id="ordersTable" class="w-full" style="width: 100% !important">
           <thead class="bg-gray-100 border-b border-gray-300">
-            <!-- Filter Row -->
             <tr class="bg-gray-50">
               <th class="px-4 py-3"></th>
               <th class="px-4 py-3"></th>
@@ -118,21 +155,17 @@
               </th>
               <th class="px-4 py-3"></th>
             </tr>
-
-            <!-- Header Row -->
             <tr>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">No</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">ID Pesanan</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Pelanggan</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tanggal</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Total</th>
-              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-              <th class="px-4 py-3 text-center text-sm font-semibold text-gray-700">Aksi</th>
+              <th class="text-sm font-semibold text-gray-700">No</th>
+              <th class="text-sm font-semibold text-gray-700">ID Pesanan</th>
+              <th class="text-sm font-semibold text-gray-700">Pelanggan</th>
+              <th class="text-sm font-semibold text-gray-700">Tanggal</th>
+              <th class="text-sm font-semibold text-gray-700">Total</th>
+              <th class="text-sm font-semibold text-gray-700">Status</th>
+              <th class="text-sm font-semibold text-gray-700">Aksi</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200">
-            <!-- Data will be populated by DataTables -->
-          </tbody>
+          <tbody class="divide-y divide-gray-200"></tbody>
         </table>
       </div>
     </div>
@@ -145,71 +178,42 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-  let orderTable;
+  // Variabel Global
+  var orderTable;
+  const canUpdate = "{{ can_update|default(true)|tojson }}";
 
-  const canUpdate = {{ can_update|default(true)|tojson }};
-
-  // Update stats dari server
   $(document).ready(function() {
-    $('#totalOrders').text({{ orders|length }});
-    $('#pendingOrders').text({{ pending }});
-    $('#approvedOrders').text({{ approved }});
-    $('#cancelledOrders').text({{ cancel }});
-  });
-
-  // Order Table
-  $(function() {
+    // Inisialisasi DataTable
     orderTable = $('#ordersTable').DataTable({
       processing: true,
+      serverSide: false,
+      autoWidth: false,
       searching: false,
       ordering: true,
       pageLength: 10,
-      order: [[0, 'desc']], // Sort by ID descending
-      language: {
-        processing: "Memuat data...",
-        emptyTable: "Tidak ada data pesanan",
-        zeroRecords: "Tidak ada data yang sesuai filter"
-      },
-      createdRow: function(row, data, dataIndex) {
-        $(row).css("background-color", dataIndex % 2 === 0 ? "#f9fafb" : "white");
-      },
+      order: [[1, 'desc']], // Sort by ID Pesanan
+      dom: 'rtip',
       ajax: {
         url: "{{ url_for('admin_orders') }}",
         type: "POST",
         data: function(d) {
-          const filters = {
+          return {
             customer: $('#filterCustomer').val(),
             date: $('#filterDate').val(),
             maxAmount: $('#filterAmount').val(),
             status: $('#filterStatus').val()
           };
-          console.log('Sending filters:', filters);
-          return filters;
-        },
-        dataSrc: function(json) {
-          console.log('Received data:', json);
-          return json.data;
-        },
-        error: function(xhr, error, code) {
-          console.error('Ajax Error:', error);
-          console.error('Status:', xhr.status);
-          console.error('Response:', xhr.responseText);
-
-          Swal.fire({
-            icon: 'error',
-            title: 'Error Memuat Data',
-            text: 'Status: ' + xhr.status + ' - ' + error,
-            footer: 'Periksa console untuk detail'
-          });
         }
       },
       columns: [
         {
           data: null,
-          render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1,
+          className: "text-left",
+          render: (data, type, row, meta) => meta.row + 1,
         },
         {
           data: "id",
+          className: "text-left",
           render: function(data, type, row) {
             return `<div>
               <div class="text-sm font-medium text-linkedin-blue">#${data}</div>
@@ -218,21 +222,29 @@
           }
         },
         {
-          data: "customer_name",
-          render: function(data, type, row) {
-            return `<div class="flex items-center">
-              <div class="h-8 w-8 flex-shrink-0">
-                <img class="h-8 w-8 rounded-full" src="${row.customer_avatar}" alt="" />
-              </div>
-              <div class="ml-3">
-                <div class="text-sm font-medium text-gray-900">${data}</div>
-                <div class="text-sm text-gray-500">${row.customer_email}</div>
-              </div>
-            </div>`;
-          }
+         data: "customer_name",
+  className: "text-left",
+  render: function(data, type, row) {
+    // Gunakan row.customer_avatar (Base64 dari Flask) 
+    // Jika kosong, gunakan UI-Avatars
+    const avatarUrl = row.customer_avatar; 
+    
+    return `<div class="flex items-center justify-start">
+      <div class="h-10 w-10 flex-shrink-0">
+        <img class="h-10 w-10 rounded-full object-cover border border-gray-200"
+             src="${avatarUrl}"
+             onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(data)}&background=0077b5&color=fff'" />
+      </div>
+      <div class="ml-4">
+        <div class="text-sm font-medium text-gray-900">${data}</div>
+        <div class="text-sm text-gray-500">${row.customer_email}</div>
+      </div>
+    </div>`;
+  }
         },
         {
           data: "created_at",
+          className: "text-left",
           render: function(data, type, row) {
             return `<div>
               <div class="text-sm text-gray-900">${row.date}</div>
@@ -242,6 +254,7 @@
         },
         {
           data: "amount",
+          className: "text-left",
           render: function(data, type, row) {
             return `<div>
               <div class="text-sm font-medium text-gray-900">Rp ${data}</div>
@@ -251,6 +264,7 @@
         },
         {
           data: "status",
+          className: "text-left",
           render: function(data, type, row) {
             const statusConfig = {
               'Pending': { color: 'bg-yellow-100 text-yellow-800', icon: 'fa-clock' },
@@ -264,109 +278,69 @@
           }
         },
         {
-          data: null,
-          render: function(data, type, row) {
-            return `<div class="flex space-x-2 justify-center">
-              <button class="text-linkedin-blue hover:text-linkedin-dark" onclick="viewOrder(${row.id})" title="Detail">
-                <i class="fas fa-eye"></i>
-              </button>
-              ${canUpdate ? `<button class="text-green-600 hover:text-green-900" onclick="editOrder(${row.id})" title="Edit">
-                <i class="fas fa-edit"></i>
-              </button>` : ''}
-              <button class="text-purple-600 hover:text-purple-900" onclick="trackOrder(${row.id})" title="Lacak">
-                <i class="fas fa-shipping-fast"></i>
-              </button>
-            </div>`;
-          }
-        }
-      ]
+  data: null,
+  className: "text-left",
+  orderable: false,
+  render: function(data, type, row) {
+    console.log('Row data:', row); // Cek di console
+    return `
+      <div class="flex space-x-2 justify-start">
+        <button onclick="orderDetail(${row.id}, ${row.user_id})" title="Detail Order"
+                class="p-2 text-linkedin-blue hover:bg-blue-50 rounded-lg inline-block">
+          <i class="fas fa-eye"></i>
+        </button>
+      </div>`;
+}
+}
+      ],
+      drawCallback: function() {
+        this.api().columns.adjust();
+      }
     });
 
-    // Filter dengan debounce untuk input text dan number
+    // Event Filter
     let filterTimeout;
     $('#filterCustomer, #filterAmount').on('input', function() {
       clearTimeout(filterTimeout);
-      filterTimeout = setTimeout(function() {
-        console.log('Reloading table with filters...');
-        orderTable.ajax.reload();
-      }, 500);
+      filterTimeout = setTimeout(() => { orderTable.ajax.reload(); }, 500);
     });
 
-    // Filter langsung untuk date dan select
     $('#filterDate, #filterStatus').on('change', function() {
-      console.log('Filter changed, reloading...');
       orderTable.ajax.reload();
     });
   });
 
-  // Function untuk view order
-  function viewOrder(id) {
-    window.location.href = `/admin/orders/${id}`;
-  }
-
-  // Function untuk edit order
-  function editOrder(id) {
-    if (!canUpdate) {
-      Swal.fire('Akses Ditolak', 'Anda tidak memiliki izin untuk mengedit pesanan', 'error');
-      return;
-    }
-    window.location.href = `/admin/orders/${id}/edit`;
-  }
-
-  // Function untuk track order
-  function trackOrder(id) {
-    window.location.href = `/admin/orders/${id}/track`;
-  }
-
-  // Function untuk reload table
+  // Functions
   function reloadTable() {
-    orderTable.ajax.reload();
-    Swal.fire({
-      icon: 'success',
-      title: 'Data berhasil di-refresh',
-      showConfirmButton: false,
-      timer: 1500
-    });
+    if (orderTable) {
+      orderTable.ajax.reload(null, false);
+      Swal.fire({
+        icon: 'success',
+        title: 'Data di-refresh',
+        showConfirmButton: false,
+        timer: 1000,
+        toast: true,
+        position: 'top-end'
+      });
+    }
   }
+
+  function orderDetail(orderId, userId) {
+    console.log('Order ID:', orderId, 'User ID:', userId);
+    if (orderId && userId) {
+        window.location.href = `/admin/orders-detail/${orderId}/${userId}`;
+    } else {
+        alert("Data tidak lengkap. Order ID: " + orderId + ", User ID: " + userId);
+    }
+}
 </script>
 
 <style>
-  #ordersTable_wrapper .dataTables_length,
-  #ordersTable_wrapper .dataTables_filter,
-  #ordersTable_wrapper .dataTables_info,
-  #ordersTable_wrapper .dataTables_paginate {
-    padding: 1rem;
-  }
-
-  #ordersTable_wrapper .dataTables_filter input {
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    margin-left: 0.5rem;
-  }
-
-  #ordersTable_wrapper .dataTables_length select {
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    margin: 0 0.5rem;
-  }
-
-  .dataTables_paginate .paginate_button {
-    padding: 0.25rem 0.75rem;
-    margin: 0 0.25rem;
-    border: 1px solid #d1d5db;
-    border-radius: 0.5rem;
-  }
-
-  .dataTables_paginate .paginate_button.current {
-    background-color: #0a66c2;
-    color: white;
-    border-color: #0a66c2;
-  }
-
-  .dataTables_paginate .paginate_button:hover:not(.current) {
-    background-color: #f3f4f6;
+  #ordersTable_wrapper .dataTables_paginate .paginate_button.current {
+    background: #0a66c2 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px !important;
   }
 </style>
 {% endblock %}
